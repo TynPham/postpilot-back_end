@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request, Response } from 'express'
 import { HTTP_STATUS_CODE } from '~/constants/httpStatusCode'
 import postServices from '~/services/posts.services'

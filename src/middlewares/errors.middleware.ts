@@ -3,10 +3,15 @@ import { omit } from 'lodash'
 import { HTTP_STATUS_CODE } from '~/constants/httpStatusCode'
 import { ErrorWithStatus } from '~/models/errors'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
 export const defaultErrorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof ErrorWithStatus) {
     return res.status(err.status || HTTP_STATUS_CODE.INTERNAL_SERVER_ERROR).json(err)
+  }
+
+  if (err?.message === 'Unauthenticated') {
+    return res
+      .status(HTTP_STATUS_CODE.UNAUTHORIZED)
+      .json(new ErrorWithStatus({ message: err.message, status: HTTP_STATUS_CODE.UNAUTHORIZED }))
   }
 
   Object.getOwnPropertyNames(err).forEach((name) => {
