@@ -5,6 +5,11 @@ import postsRouter from './routes/posts.router'
 import 'dotenv/config'
 import cors from 'cors'
 import { envConfig } from './configs/env.config'
+import swaggerUi from 'swagger-ui-express'
+import fs from 'fs'
+import path from 'path'
+import yaml from 'yaml'
+import appRouter from './routes'
 
 const app = express()
 const port = envConfig.port
@@ -31,7 +36,13 @@ app.get('/', async (req: Request, res: Response) => {
   })
 })
 
-app.use('/posts', postsRouter)
+app.use('/api/v1', appRouter)
+
+// swagger
+const swaggerPath = path.join(__dirname, '../docs/openapi.yaml')
+const file = fs.readFileSync(swaggerPath, 'utf8')
+const swaggerDocument = yaml.parse(file)
+app.use('/api/v1/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
 // error handler
 app.use(defaultErrorHandler as ErrorRequestHandler)
