@@ -8,7 +8,7 @@ export const getPostsController = async (req: Request, res: Response) => {
   const result = await postServices.getPosts()
 
   res.status(HTTP_STATUS_CODE.OK).json({
-    result,
+    data: result,
     message: 'Get posts successfully'
   })
 }

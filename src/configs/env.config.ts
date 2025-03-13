@@ -10,5 +10,7 @@ config({
 export const envConfig = {
   port: process.env.PORT || 4000,
   clerk_public_key: process.env.CLERK_PUBLIC_KEY,
-  clerk_secret_key: process.env.CLERK_SECRET_KEY
+  clerk_secret_key: process.env.CLERK_SECRET_KEY,
+  facebook_client_id: process.env.FACEBOOK_CLIENT_ID,
+  facebook_client_secret: process.env.FACEBOOK_CLIENT_SECRET
 }

@@ -1,7 +1,6 @@
 import express, { ErrorRequestHandler, Request, Response } from 'express'
 import database from '~/services/database.services'
 import { defaultErrorHandler } from './middlewares/errors.middleware'
-import postsRouter from './routes/posts.router'
 import 'dotenv/config'
 import cors from 'cors'
 import { envConfig } from './configs/env.config'

@@ -17,7 +17,7 @@ datasource db {
 
 model Post {
   id                  String            @id @default(uuid())
-  ownerId             String
+  ownerId             String            @unique 
   platform            String
   metadata            Json
   publicationTime     DateTime
@@ -30,8 +30,10 @@ model Post {
 
 model SocialCredential {
   id        String   @id @default(uuid())
+  socialId  String   @unique
   platform  String
   credentials Json
+  metadata  Json
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
