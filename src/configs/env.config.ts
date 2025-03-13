@@ -12,5 +12,7 @@ export const envConfig = {
   clerk_public_key: process.env.CLERK_PUBLIC_KEY,
   clerk_secret_key: process.env.CLERK_SECRET_KEY,
   facebook_client_id: process.env.FACEBOOK_CLIENT_ID,
-  facebook_client_secret: process.env.FACEBOOK_CLIENT_SECRET
+  facebook_client_secret: process.env.FACEBOOK_CLIENT_SECRET,
+  aws_region: process.env.AWS_REGION,
+  aws_s3_bucket: process.env.AWS_S3_BUCKET
 }

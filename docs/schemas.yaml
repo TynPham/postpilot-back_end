@@ -1,0 +1,130 @@
+components:
+  schemas:
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+        ownerID:
+          type: string
+        platform:
+          type: string
+        status:
+          type: string
+        credential:
+          type: object
+        metadata:
+          type: object
+          properties:
+            type:
+              type: string
+            content:
+              type: string
+            assets:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  url:
+                    type: string
+    CreatePostBody:
+      type: object
+      properties:
+        publicationTime:
+          type: string
+          format: date-time
+        socialPosts:
+          type: array
+          items:
+            type: object
+            properties:
+              platform:
+                type: string
+              socialCredentialID:
+                type: string
+              metadata:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  content:
+                    type: string
+                  assets:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                        url:
+                          type: string
+    SocialCredential:
+      type: object
+      properties:
+        id:
+          type: string
+        socialID:
+          type: string
+        platform:
+          type: string
+        credential:
+          type: object
+          additionalProperties:
+            oneOf:
+              - type: string
+        metadata:
+          type: object
+          properties:
+            name:
+              type: string
+            avatar_url:
+              type: string
+          additionalProperties:
+            oneOf:
+              - type: string
+    CreateSocialCredentialBody:
+      type: array
+      items:
+        type: object
+        properties:
+          platform:
+            type: string
+          socialID:
+            type: string
+          credential:
+            type: object
+            additionalProperties:
+              oneOf:
+                - type: string
+          metadata:
+            type: object
+            properties:
+              name:
+                type: string
+              avatar_url:
+                type: string
+            additionalProperties:
+              oneOf:
+                - type: string
+    UploadImageBody:
+      type: object
+      properties:
+        image:
+          type: string
+          format: binary
+    UploadImageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              url:
+                type: string

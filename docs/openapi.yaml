@@ -25,7 +25,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/post'
+                      $ref: './schemas.yaml#/components/schemas/Post'
                   message:
                     type: string
         '400':
@@ -46,7 +46,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/createPostBody'
+              $ref: './schemas.yaml#/components/schemas/CreatePostBody'
       responses:
         '201':
           description: Created
@@ -57,7 +57,97 @@ paths:
                 properties:
                   message:
                     type: string
-
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+  /social-credentials:
+    get:
+      tags:
+        - Social Credentials
+      summary: Get all social credentials
+      description: Get all social media credentials
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: platform
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by platform
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: './schemas.yaml#/components/schemas/SocialCredential'
+                  message:
+                    type: string
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+    post:
+      tags:
+        - Social Credentials
+      summary: Create a new social credential
+      description: Add a new social media credential
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas.yaml#/components/schemas/CreateSocialCredentialBody'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+  /media/upload-image:
+    post:
+      tags:
+        - Media
+      summary: Upload an image
+      description: Upload an image to be used in a post
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: './schemas.yaml#/components/schemas/UploadImageBody'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: './schemas.yaml#/components/schemas/UploadImageResponse'
         '400':
           description: Bad Request
         '401':
@@ -69,64 +159,3 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-  schemas:
-    post:
-      type: object
-      properties:
-        id:
-          type: string
-        ownerID:
-          type: string
-        platform:
-          type: string
-        status:
-          type: string
-        credential:
-          type: object
-        metadata:
-          type: object
-          properties:
-            type:
-              type: string
-            content:
-              type: string
-            assets:
-              type: array
-              items:
-                type: object
-                properties:
-                  type:
-                    type: string
-                  url:
-                    type: string
-    createPostBody:
-      type: object
-      properties:
-        publicationTime:
-          type: string
-          format: date-time
-        socialPosts:
-          type: array
-          items:
-            type: object
-            properties:
-              platform:
-                type: string
-              socialCredentialID:
-                type: string
-              metadata:
-                type: object
-                properties:
-                  type:
-                    type: string
-                  content:
-                    type: string
-                  assets:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        type:
-                          type: string
-                        url:
-                          type: string
