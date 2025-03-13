@@ -13,6 +13,7 @@ class CredentialServices {
               const longLiveTokenFb = await getLongLivedTokenFacebook(credential.credential.code)
               return {
                 platform: credential.platform,
+                socialOwnerId: credential.socialOwnerId,
                 socialId: credential.socialId,
                 credentials: {
                   access_token: longLiveTokenFb,

@@ -10,6 +10,7 @@ export interface CreatePostRequestBody {
         type: string
         url: string
       }[]
+      [key: string]: any
     }
   }[]
 }
