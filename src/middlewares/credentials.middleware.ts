@@ -18,7 +18,7 @@ export const createCredentialValidator = validate(
         notEmpty: true,
         errorMessage: 'Social ID must be a non-empty string'
       },
-      '*.credential.code': {
+      '*.credentials.code': {
         isString: true,
         notEmpty: true,
         errorMessage: 'Code must be a non-empty string'

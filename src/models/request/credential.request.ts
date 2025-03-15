@@ -2,7 +2,7 @@ export interface CreateCredentialRequestBody {
   platform: string
   socialOwnerId: string
   socialId: string
-  credential: {
+  credentials: {
     code: string
     [key: string]: any
   }

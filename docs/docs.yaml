@@ -34,6 +34,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal Server Error
+  /posts/schedule:
     post:
       tags:
         - Posts
@@ -171,8 +172,6 @@ components:
           type: string
         status:
           type: string
-        credential:
-          type: object
         metadata:
           type: object
           properties:
@@ -227,9 +226,11 @@ components:
           type: string
         socialID:
           type: string
+        socialOwnerID:
+          type: string
         platform:
           type: string
-        credential:
+        credentials:
           type: object
           additionalProperties:
             oneOf:
@@ -253,7 +254,9 @@ components:
             type: string
           socialID:
             type: string
-          credential:
+          socialOwnerID:
+            type: string
+          credentials:
             type: object
             additionalProperties:
               oneOf:

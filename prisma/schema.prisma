@@ -17,12 +17,12 @@ datasource db {
 
 model Post {
   id                  String            @id @default(uuid())
-  ownerId             String            @unique
+  ownerId             String            
   platform            String
   metadata            Json
   publicationTime     DateTime
   socialCredentialId  String
-  socialCredential    SocialCredential  @relation(fields: [socialCredentialId], references: [socialId])
+  socialCredential    SocialCredential  @relation(fields: [socialCredentialId], references: [id])
   status              String
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt

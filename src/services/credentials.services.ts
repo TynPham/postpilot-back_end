@@ -10,14 +10,14 @@ class CredentialServices {
         case 'facebook':
           const credentialsData = await Promise.all(
             body.map(async (credential) => {
-              const longLiveTokenFb = await getLongLivedTokenFacebook(credential.credential.code)
+              const longLiveTokenFb = await getLongLivedTokenFacebook(credential.credentials.code)
               return {
                 platform: credential.platform,
                 socialOwnerId: credential.socialOwnerId,
                 socialId: credential.socialId,
                 credentials: {
                   access_token: longLiveTokenFb,
-                  page_id: credential.credential.page_id
+                  page_id: credential.credentials.page_id
                 },
                 metadata: {
                   name: credential.metadata.name,

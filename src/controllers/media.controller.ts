@@ -7,9 +7,9 @@ import { HTTP_STATUS_CODE } from '~/constants/httpStatusCode'
 export const uploadImageController = async (req: Request, res: Response, next: NextFunction) => {
   const form = formidable({
     uploadDir: path.resolve('uploads/images/temp'),
-    maxFiles: 2,
+    maxFiles: 4,
     keepExtensions: true,
-    maxFileSize: 1000 * 1024 * 2, // 2mb,
+    maxFileSize: 1000 * 1024 * 4, // 2mb,
     filter: ({ name, originalFilename, mimetype }) => {
       const valid = name === 'images' && Boolean(mimetype?.includes('image/'))
       if (!valid) {

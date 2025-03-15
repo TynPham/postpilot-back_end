@@ -10,6 +10,13 @@ class PostServices {
     const posts = await database.post.findMany({
       where: {
         ownerId
+      },
+      include: {
+        socialCredential: {
+          select: {
+            metadata: true
+          }
+        }
       }
     })
     return posts
@@ -19,17 +26,16 @@ class PostServices {
     const socialCredentialIDs = body.socialPosts.map((socialPost) => socialPost.socialCredentialID)
     const socialCredentials = await database.socialCredential.findMany({
       where: {
-        socialId: {
+        id: {
           in: socialCredentialIDs
         }
       },
-      select: { socialId: true, credentials: true }
+      select: { id: true, credentials: true }
     })
 
     const schedulePostRequestBody = await Promise.all(
       body.socialPosts.map(async (socialPost) => {
-        const credential = socialCredentials.find((c) => c.socialId === socialPost.socialCredentialID)
-          ?.credentials as any
+        const credential = socialCredentials.find((c) => c.id === socialPost.socialCredentialID)?.credentials as any
 
         if (!credential) {
           throw new ErrorWithStatus({

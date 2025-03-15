@@ -10,6 +10,7 @@ import path from 'path'
 import yaml from 'yaml'
 import appRouter from './routes'
 import { initFolder } from './utils/file'
+import schedulePostsJob from './jobs/schedule-post'
 
 const app = express()
 const port = envConfig.port
@@ -49,6 +50,9 @@ app.use('/api/v1/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 // error handler
 app.use(defaultErrorHandler as ErrorRequestHandler)
 
+// job
+schedulePostsJob.start()
+
 const server = app.listen(port, async () => {
   await connectToDatabase()
   console.log(`Example app listening on port ${port}`)
@@ -56,6 +60,7 @@ const server = app.listen(port, async () => {
 
 process.on('SIGINT', () => {
   server.close(async () => {
+    schedulePostsJob.stop()
     await database.$disconnect()
     console.log('Disconnected')
     console.log('Server closed')
