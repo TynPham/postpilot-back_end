@@ -11,6 +11,21 @@ components:
           type: string
         status:
           type: string
+        socialCredentialID:
+          type: string
+        socialCredential:
+          type: object
+          properties:
+            metadata:
+              type: object
+              properties:
+                name:
+                  type: string
+                avatar_url:
+                  type: string
+              additionalProperties:
+                oneOf:
+                  - type: string
         metadata:
           type: object
           properties:

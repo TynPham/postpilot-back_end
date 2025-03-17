@@ -6,10 +6,11 @@ import { ErrorWithStatus } from '~/models/errors'
 import { HTTP_STATUS_CODE } from '~/constants/httpStatusCode'
 
 class PostServices {
-  async getPosts(ownerId: string) {
+  async getPosts(ownerId: string, platform: string) {
     const posts = await database.post.findMany({
       where: {
-        ownerId
+        ownerId,
+        platform
       },
       include: {
         socialCredential: {
@@ -19,6 +20,7 @@ class PostServices {
         }
       }
     })
+
     return posts
   }
 
@@ -76,6 +78,23 @@ class PostServices {
     await database.post.createMany({
       data: schedulePostRequestBody
     })
+  }
+
+  async getPostDetails(postId: string) {
+    const post = await database.post.findUnique({
+      where: {
+        id: postId
+      },
+      include: {
+        socialCredential: {
+          select: {
+            metadata: true
+          }
+        }
+      }
+    })
+
+    return post
   }
 }
 

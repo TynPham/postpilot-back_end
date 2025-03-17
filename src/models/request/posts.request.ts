@@ -1,3 +1,5 @@
+import { ParamsDictionary } from 'express-serve-static-core'
+
 export interface CreatePostRequestBody {
   publicationTime: string
   socialPosts: {
@@ -13,4 +15,12 @@ export interface CreatePostRequestBody {
       [key: string]: any
     }
   }[]
+}
+
+export interface GetPostQuery {
+  platform: string
+}
+
+export interface GetPostDetailsParams extends ParamsDictionary {
+  id: string
 }
