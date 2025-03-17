@@ -21,8 +21,8 @@ model Post {
   platform            String
   metadata            Json
   publicationTime     DateTime
-  socialCredentialId  String
-  socialCredential    SocialCredential  @relation(fields: [socialCredentialId], references: [id])
+  socialCredentialID  String
+  socialCredential    SocialCredential  @relation(fields: [socialCredentialID], references: [id])
   status              String
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt

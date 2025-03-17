@@ -59,7 +59,7 @@ class PostServices {
           status: 'scheduled',
           publicationTime: body.publicationTime,
           platform: socialPost.platform,
-          socialCredentialId: socialPost.socialCredentialID,
+          socialCredentialID: socialPost.socialCredentialID,
           metadata: {
             type: socialPost.metadata.type,
             content: socialPost.metadata.content,
