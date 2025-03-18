@@ -9,8 +9,9 @@ class PostServices {
   async getPosts(ownerId: string, platform: string) {
     const posts = await database.post.findMany({
       where: {
-        ownerId,
-        platform
+        socialCredential: {
+          ownerId
+        }
       },
       include: {
         socialCredential: {
@@ -24,7 +25,7 @@ class PostServices {
     return posts
   }
 
-  async schedulePost(body: CreatePostRequestBody, ownerId: string) {
+  async schedulePost(body: CreatePostRequestBody) {
     const socialCredentialIDs = body.socialPosts.map((socialPost) => socialPost.socialCredentialID)
     const socialCredentials = await database.socialCredential.findMany({
       where: {
@@ -57,7 +58,6 @@ class PostServices {
         )
 
         return {
-          ownerId,
           status: 'scheduled',
           publicationTime: body.publicationTime,
           platform: socialPost.platform,

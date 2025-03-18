@@ -5,8 +5,6 @@ components:
       properties:
         id:
           type: string
-        ownerID:
-          type: string
         platform:
           type: string
         status:
@@ -78,9 +76,11 @@ components:
       properties:
         id:
           type: string
-        socialID:
+        ownerId:
           type: string
-        socialOwnerID:
+        socialId:
+          type: string
+        socialOwnerId:
           type: string
         platform:
           type: string
@@ -106,9 +106,9 @@ components:
         properties:
           platform:
             type: string
-          socialID:
+          socialId:
             type: string
-          socialOwnerID:
+          socialOwnerId:
             type: string
           credentials:
             type: object
