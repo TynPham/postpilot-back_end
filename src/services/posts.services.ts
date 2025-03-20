@@ -17,7 +17,8 @@ class PostServices {
       where: {
         socialCredential: {
           ownerId
-        }
+        },
+        platform
       },
       include: {
         socialCredential: {

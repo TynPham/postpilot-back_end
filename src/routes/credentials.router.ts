@@ -1,22 +1,12 @@
-import { ClerkExpressWithAuth } from '@clerk/clerk-sdk-node'
 import { Router } from 'express'
 import { createCredentialController, getCredentialsController } from '~/controllers/credentials.controller'
+import { authValidator } from '~/middlewares/auth.middleware'
 import { createCredentialValidator, getCredentialValidator } from '~/middlewares/credentials.middleware'
 import { wrapHandleRequest } from '~/utils/handles'
 
 const credentialsRouter = Router()
 
-credentialsRouter.post(
-  '/',
-  ClerkExpressWithAuth() as any,
-  createCredentialValidator,
-  wrapHandleRequest(createCredentialController)
-)
-credentialsRouter.get(
-  '/',
-  ClerkExpressWithAuth() as any,
-  getCredentialValidator,
-  wrapHandleRequest(getCredentialsController)
-)
+credentialsRouter.post('/', authValidator, createCredentialValidator, wrapHandleRequest(createCredentialController))
+credentialsRouter.get('/', authValidator, getCredentialValidator, wrapHandleRequest(getCredentialsController))
 
 export default credentialsRouter
