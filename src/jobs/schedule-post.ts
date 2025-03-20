@@ -1,5 +1,6 @@
 import { CronJob } from 'cron'
 import { publishPostFb } from '~/helpers/facebook'
+import { publishPostThreads } from '~/helpers/threads'
 import database from '~/services/database.services'
 
 const platformHandlers: { [key: string]: any } = {
@@ -10,6 +11,14 @@ const platformHandlers: { [key: string]: any } = {
       metadata: {
         message: metadata.content,
         attached_media: metadata.media_fbid
+      }
+    }),
+  threads: (metadata: any, credentials: any) =>
+    publishPostThreads({
+      access_token: credentials.access_token,
+      threads_user_id: credentials.user_id,
+      metadata: {
+        creation_id: metadata.creation_id
       }
     })
 }
@@ -49,20 +58,22 @@ const schedulePostsJob = new CronJob('*/15 * * * * *', async () => {
           const credentials = post.socialCredential.credentials as any
           const postMetadata = post.metadata as any
 
-          const result = await postFunction(postMetadata, credentials)
+          try {
+            const result = await postFunction(postMetadata, credentials)
 
-          if (result) {
-            console.log(`Post ${post.id} published successfully on ${platform}`)
-            await database.post.update({
-              where: {
-                id: post.id
-              },
-              data: {
-                status: 'published'
-              }
-            })
-          } else {
-            console.log(`Failed to publish post ${post.id} on ${platform}`)
+            if (result) {
+              console.log(`Post ${post.id} published successfully on ${platform}`)
+              await database.post.update({
+                where: {
+                  id: post.id
+                },
+                data: {
+                  status: 'published'
+                }
+              })
+            }
+          } catch (error) {
+            console.log(`Failed to publish post ${post.id} on ${platform}`, error)
             await database.post.update({
               where: {
                 id: post.id
@@ -71,6 +82,7 @@ const schedulePostsJob = new CronJob('*/15 * * * * *', async () => {
                 status: 'failed'
               }
             })
+            throw error
           }
         }
       })

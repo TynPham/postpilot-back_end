@@ -20,8 +20,7 @@ export const schedulePostController = async (
   res: Response
 ) => {
   const body = req.body
-  const ownerId = req.auth?.userId
-  await postServices.schedulePost(body, ownerId as string)
+  await postServices.schedulePost(body)
   res.status(HTTP_STATUS_CODE.CREATED).json({
     message: 'Create post successfully'
   })
