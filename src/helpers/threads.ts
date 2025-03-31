@@ -5,12 +5,12 @@ import { CarouselThreadsPostParams, PublishPostThreadsType, SingleThreadsPostPar
 import { GetProfileThreadsResponse } from '~/types'
 import { ExchangeCodeForTokenThreadsResponse, LongLivedTokenThreadsResponse } from '~/types/token'
 
-export const THREADS_API = 'https://graph.threads.net'
+export const THREADS_API_URI = 'https://graph.threads.net'
 export const THREADS_API_VERSION = 'v1.0'
 
 export const exchangeCodeForToken = async (code: string, redirectUri: string) => {
   try {
-    const response = await axios.post<ExchangeCodeForTokenThreadsResponse>(`${THREADS_API}/oauth/access_token`, {
+    const response = await axios.post<ExchangeCodeForTokenThreadsResponse>(`${THREADS_API_URI}/oauth/access_token`, {
       client_id: process.env.THREADS_CLIENT_ID,
       client_secret: process.env.THREADS_CLIENT_SECRET,
       grant_type: 'authorization_code',
@@ -32,7 +32,7 @@ export const getLongLivedTokenThreads = async (code: string, redirectUri: string
     const exchangeCode = await exchangeCodeForToken(code, redirectUri)
     const access_token = exchangeCode.access_token
     const response = await axios.get<LongLivedTokenThreadsResponse>(
-      `${THREADS_API}/access_token?grant_type=th_exchange_token&client_secret=${process.env.THREADS_CLIENT_SECRET}&access_token=${access_token}`
+      `${THREADS_API_URI}/access_token?grant_type=th_exchange_token&client_secret=${process.env.THREADS_CLIENT_SECRET}&access_token=${access_token}`
     )
     return response.data
   } catch (error) {
@@ -47,7 +47,7 @@ export const getLongLivedTokenThreads = async (code: string, redirectUri: string
 export const getProfileThreads = async (access_token: string) => {
   try {
     const response = await axios.get<GetProfileThreadsResponse>(
-      `${THREADS_API}/${THREADS_API_VERSION}/me?fields=id,username,name,threads_profile_picture_url,threads_biography&access_token=${access_token}`
+      `${THREADS_API_URI}/${THREADS_API_VERSION}/me?fields=id,username,name,threads_profile_picture_url,threads_biography&access_token=${access_token}`
     )
     return response.data
   } catch (error) {
@@ -78,7 +78,7 @@ export const createSingleThreadsMediaContainer = async (
       queryParams.append('text', params.text)
     }
     const response = await axios.post<{ id: string }>(
-      `${THREADS_API}/${THREADS_API_VERSION}/${threads_user_id}/threads?${queryParams.toString()}`
+      `${THREADS_API_URI}/${THREADS_API_VERSION}/${threads_user_id}/threads?${queryParams.toString()}`
     )
     return response.data.id
   } catch (error) {
@@ -134,7 +134,7 @@ export const createCarouselThreadsMediaContainer = async (
     const childrenString = children.join(',')
     queryParams.append('children', childrenString)
     const response = await axios.post<{ id: string }>(
-      `${THREADS_API}/${THREADS_API_VERSION}/${threads_user_id}/threads?${queryParams.toString()}`
+      `${THREADS_API_URI}/${THREADS_API_VERSION}/${threads_user_id}/threads?${queryParams.toString()}`
     )
     return response.data.id
   } catch (error) {
@@ -156,7 +156,7 @@ export const publishPostThreads = async ({
     queryParams.append('access_token', access_token)
     queryParams.append('creation_id', creation_id)
     const response = await axios.post(
-      `${THREADS_API}/${THREADS_API_VERSION}/${threads_user_id}/threads_publish?${queryParams.toString()}`
+      `${THREADS_API_URI}/${THREADS_API_VERSION}/${threads_user_id}/threads_publish?${queryParams.toString()}`
     )
     return response.data
   } catch (error) {

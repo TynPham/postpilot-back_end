@@ -7,11 +7,11 @@ import { UploadImageFbType } from '~/models/utils'
 import { LongLivedTokenFbResponse } from '~/types/token'
 
 const FACEBOOK_API_VERSION = 'v22.0'
-const FACEBOOK_GRAPH_API = 'https://graph.facebook.com'
+const FACEBOOK_GRAPH_API_URI = 'https://graph.facebook.com'
 
 export const uploadImageFb = async ({ access_token, page_id, url }: UploadImageFbType) => {
   try {
-    const response = await axios.post(`${FACEBOOK_GRAPH_API}/${FACEBOOK_API_VERSION}/${page_id}/photos`, {
+    const response = await axios.post(`${FACEBOOK_GRAPH_API_URI}/${FACEBOOK_API_VERSION}/${page_id}/photos`, {
       url,
       access_token,
       published: false
@@ -29,14 +29,17 @@ export const uploadImageFb = async ({ access_token, page_id, url }: UploadImageF
 
 export const publishPostFb = async ({ access_token, page_id, metadata }: PublishPostFbType) => {
   try {
-    const response = await axios.post<{ id: string }>(`${FACEBOOK_GRAPH_API}/${FACEBOOK_API_VERSION}/${page_id}/feed`, {
-      message: metadata.message,
-      attached_media: metadata.attached_media.map((mediaId) => ({
-        media_fbid: mediaId
-      })),
-      access_token,
-      published: true
-    })
+    const response = await axios.post<{ id: string }>(
+      `${FACEBOOK_GRAPH_API_URI}/${FACEBOOK_API_VERSION}/${page_id}/feed`,
+      {
+        message: metadata.message,
+        attached_media: metadata.attached_media.map((mediaId) => ({
+          media_fbid: mediaId
+        })),
+        access_token,
+        published: true
+      }
+    )
 
     return response?.data?.id
   } catch (error) {

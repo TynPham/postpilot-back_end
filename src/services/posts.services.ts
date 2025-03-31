@@ -10,6 +10,7 @@ import {
   createSingleItemsContainer,
   createSingleThreadsMediaContainer
 } from '~/helpers/threads'
+import { uploadImageXFromUrl } from '~/helpers/x'
 
 class PostServices {
   async getPosts(ownerId: string, platform: string) {
@@ -84,14 +85,38 @@ class PostServices {
         }
 
         // threads
-        // if (socialPost.platform === Platform.Threads) {
-        // type: carousel
-        if (socialPost.metadata.assets.length > 1) {
-          const creation_id = await createCarouselThreadsMediaContainer(credential.access_token, credential.user_id, {
+        if (socialPost.platform === Platform.Threads) {
+          // type: carousel
+          if (socialPost.metadata.assets.length > 1) {
+            const creation_id = await createCarouselThreadsMediaContainer(credential.access_token, credential.user_id, {
+              media_type: socialPost.metadata.assets[0].type.toUpperCase() as 'IMAGE' | 'VIDEO',
+              image_url: socialPost.metadata.assets.map((asset) => asset.url),
+              text: socialPost.metadata.content
+            })
+            return {
+              status: 'scheduled',
+              publicationTime: body.publicationTime,
+              platform: socialPost.platform,
+              socialCredentialID: socialPost.socialCredentialID,
+              metadata: {
+                type: socialPost.metadata.type,
+                content: socialPost.metadata.content,
+                assets: socialPost.metadata.assets.map((asset) => ({
+                  type: asset.type,
+                  url: asset.url
+                })),
+                creation_id
+              }
+            }
+          }
+
+          // type: single
+          const creation_id = await createSingleThreadsMediaContainer(credential.access_token, credential.user_id, {
             media_type: socialPost.metadata.assets[0].type.toUpperCase() as 'IMAGE' | 'VIDEO',
-            image_url: socialPost.metadata.assets.map((asset) => asset.url),
+            image_url: socialPost.metadata.assets[0].url,
             text: socialPost.metadata.content
           })
+
           return {
             status: 'scheduled',
             publicationTime: body.publicationTime,
@@ -109,12 +134,18 @@ class PostServices {
           }
         }
 
-        // type: single
-        const creation_id = await createSingleThreadsMediaContainer(credential.access_token, credential.user_id, {
-          media_type: socialPost.metadata.assets[0].type.toUpperCase() as 'IMAGE' | 'VIDEO',
-          image_url: socialPost.metadata.assets[0].url,
-          text: socialPost.metadata.content
-        })
+        // x
+        // if (socialPost.platform === Platform.X) {
+        const imageXIds = await Promise.all(
+          socialPost.metadata.assets.map((asset) =>
+            uploadImageXFromUrl(
+              asset.url,
+              credential.access_token,
+              socialPost.socialCredentialID,
+              credential.refresh_token
+            )
+          )
+        )
 
         return {
           status: 'scheduled',
@@ -128,7 +159,7 @@ class PostServices {
               type: asset.type,
               url: asset.url
             })),
-            creation_id
+            media_ids: imageXIds
           }
         }
         // }

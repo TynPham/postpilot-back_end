@@ -83,7 +83,8 @@ class CredentialServices {
               socialId: xProfileData.id,
               credentials: {
                 access_token: xAccessToken.access_token,
-                user_id: xProfileData.id
+                user_id: xProfileData.id,
+                refresh_token: xAccessToken.refresh_token
               },
               metadata: {
                 name: xProfileData.name,
