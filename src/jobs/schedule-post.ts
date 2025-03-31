@@ -1,6 +1,8 @@
 import { CronJob } from 'cron'
+import { Platform } from '~/constants/enum'
 import { publishPostFb } from '~/helpers/facebook'
 import { publishPostThreads } from '~/helpers/threads'
+import { publishPostX } from '~/helpers/x'
 import database from '~/services/database.services'
 
 const platformHandlers: { [key: string]: any } = {
@@ -20,6 +22,13 @@ const platformHandlers: { [key: string]: any } = {
       metadata: {
         creation_id: metadata.creation_id
       }
+    }),
+  x: (metadata: any, credentials: any) =>
+    publishPostX(credentials.access_token, {
+      text: metadata.content,
+      media_ids: metadata.media_ids,
+      socialCredentialID: credentials.socialCredentialID,
+      refresh_token: credentials.refresh_token
     })
 }
 
@@ -56,6 +65,9 @@ const schedulePostsJob = new CronJob('*/15 * * * * *', async () => {
           const postFunction = platformHandlers[platform]
 
           const credentials = post.socialCredential.credentials as any
+          if (platform === Platform.X) {
+            credentials.socialCredentialID = post.socialCredentialID
+          }
           const postMetadata = post.metadata as any
 
           try {

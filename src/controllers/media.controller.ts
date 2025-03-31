@@ -9,7 +9,7 @@ export const uploadImageController = async (req: Request, res: Response, next: N
     uploadDir: path.resolve('uploads/images/temp'),
     maxFiles: 4,
     keepExtensions: true,
-    maxFileSize: 1000 * 1024 * 4, // 2mb,
+    maxFileSize: 1024 * 1024 * 4, // 4mb,
     filter: ({ name, originalFilename, mimetype }) => {
       const valid = name === 'images' && Boolean(mimetype?.includes('image/'))
       if (!valid) {

@@ -27,7 +27,7 @@ export const uploadFileToS3 = ({
       /*...*/
     ], // optional tags
     queueSize: 4, // optional concurrency configuration
-    partSize: 1024 * 1024 * 5, // optional size of each part, in bytes, at least 5MB
+    // partSize: 1024 * 1024 * 4, // optional size of each part, in bytes, at least 5MB
     leavePartsOnError: false // optional manually handle dropped parts
   })
 
