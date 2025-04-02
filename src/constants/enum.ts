@@ -6,5 +6,7 @@ export enum MediaType {
 export enum Platform {
   Facebook = 'facebook',
   Threads = 'threads',
-  X = 'x'
+  X = 'x',
+  Instagram = 'instagram',
+  Reddit = 'reddit'
 }

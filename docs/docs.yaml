@@ -197,6 +197,34 @@ paths:
           description: Unauthorized
         '500':
           description: Internal Server Error
+  /statistics:
+    get:
+      tags:
+        - Statistics
+      summary: Get statistics
+      description: Get statistics about the posts
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GetStatisticsResponse'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
 components:
   securitySchemes:
     bearerAuth:
@@ -348,3 +376,20 @@ components:
                 type: string
               url:
                 type: string
+    GetStatisticsResponse:
+      type: object
+      properties:
+        totalPosts:
+          type: number
+        postsByPlatform:
+          type: object
+          additionalProperties:
+            type: number
+        recentPosts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Post'
+        postsByTimeRange:
+          type: object
+          additionalProperties:
+            type: number

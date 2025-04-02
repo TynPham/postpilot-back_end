@@ -145,3 +145,20 @@ components:
                 type: string
               url:
                 type: string
+    GetStatisticsResponse:
+      type: object
+      properties:
+        totalPosts:
+          type: number
+        postsByPlatform:
+          type: object
+          additionalProperties:
+            type: number
+        recentPosts:
+          type: array
+          items: 
+            $ref: "#/components/schemas/Post"
+        postsByTimeRange:
+          type: object
+          additionalProperties:
+            type: number
