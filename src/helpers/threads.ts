@@ -158,7 +158,7 @@ export const publishPostThreads = async ({
     const response = await axios.post(
       `${THREADS_API_URI}/${THREADS_API_VERSION}/${threads_user_id}/threads_publish?${queryParams.toString()}`
     )
-    return response.data
+    return response.data.id
   } catch (error) {
     console.log(error)
     throw new ErrorWithStatus({

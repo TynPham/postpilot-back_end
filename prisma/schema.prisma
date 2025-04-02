@@ -25,7 +25,23 @@ model Post {
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
 
+  publishedPost PublishedPost? @relation("PostToPublishedPost")
+
   @@map("posts")
+}
+
+model PublishedPost {
+  id        String
+  postId    String
+  metadata  Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  post Post @relation("PostToPublishedPost", fields: [id], references: [id])
+
+  @@id([id, postId])
+  @@unique([id])
+  @@map("published_posts")
 }
 
 model SocialCredential {

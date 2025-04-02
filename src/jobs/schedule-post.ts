@@ -75,14 +75,23 @@ const schedulePostsJob = new CronJob('*/15 * * * * *', async () => {
 
             if (result) {
               console.log(`Post ${post.id} published successfully on ${platform}`)
-              await database.post.update({
-                where: {
-                  id: post.id
-                },
-                data: {
-                  status: 'published'
-                }
-              })
+              await Promise.all([
+                database.post.update({
+                  where: {
+                    id: post.id
+                  },
+                  data: {
+                    status: 'published'
+                  }
+                }),
+                database.publishedPost.create({
+                  data: {
+                    id: post.id,
+                    postId: result,
+                    metadata: {}
+                  }
+                })
+              ])
             }
           } catch (error) {
             console.log(`Failed to publish post ${post.id} on ${platform}`, error)

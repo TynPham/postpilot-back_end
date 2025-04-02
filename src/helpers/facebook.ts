@@ -65,3 +65,13 @@ export const getLongLivedTokenFacebook = async (accessToken: string) => {
     })
   }
 }
+
+export const getFbLikes = async (postId: string, accessToken: string) => {
+  const queryParams = new URLSearchParams({
+    access_token: accessToken
+  })
+  const response = await axios.get(
+    `${FACEBOOK_GRAPH_API_URI}/${FACEBOOK_API_VERSION}/${postId}/likes?${queryParams.toString()}`
+  )
+  return response?.data?.data
+}

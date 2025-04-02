@@ -1,16 +1,13 @@
 import { CreatePostRequestBody } from '~/models/request/posts.request'
 import database from './database.services'
-import { assert } from 'console'
-import { uploadImageFb } from '~/helpers/facebook'
+
+import { getFbLikes, uploadImageFb } from '~/helpers/facebook'
 import { ErrorWithStatus } from '~/models/errors'
 import { HTTP_STATUS_CODE } from '~/constants/httpStatusCode'
 import { Platform } from '~/constants/enum'
-import {
-  createCarouselThreadsMediaContainer,
-  createSingleItemsContainer,
-  createSingleThreadsMediaContainer
-} from '~/helpers/threads'
+import { createCarouselThreadsMediaContainer, createSingleThreadsMediaContainer } from '~/helpers/threads'
 import { uploadImageXFromUrl } from '~/helpers/x'
+import { omit } from 'lodash'
 
 class PostServices {
   async getPosts(ownerId: string, platform: string) {
@@ -26,7 +23,8 @@ class PostServices {
           select: {
             metadata: true
           }
-        }
+        },
+        publishedPost: true
       }
     })
 
@@ -179,13 +177,28 @@ class PostServices {
       include: {
         socialCredential: {
           select: {
-            metadata: true
+            metadata: true,
+            credentials: true
           }
-        }
+        },
+        publishedPost: true
       }
     })
 
-    return post
+    if (post?.publishedPost) {
+      let metadata: any = {}
+
+      if (post?.platform === Platform.Facebook) {
+        metadata.likes = await getFbLikes(
+          post.publishedPost.postId,
+          (post.socialCredential.credentials as any).access_token
+        )
+      }
+
+      post.publishedPost.metadata = metadata
+    }
+
+    return omit(post, ['socialCredential.credentials'])
   }
 }
 

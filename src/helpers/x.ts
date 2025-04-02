@@ -146,17 +146,17 @@ export const publishPostX = async (
         }
       }
     )
-    return response.data
+    return response.data.id
   } catch (error: any) {
     console.log(error)
     if (error.response.status === 401) {
       const xToken = await refreshXToken(metadata.refresh_token, metadata.socialCredentialID)
       return publishPostX(xToken.access_token, metadata)
     }
-    throw new ErrorWithStatus({
-      status: HTTP_STATUS_CODE.BAD_REQUEST,
-      message: 'Bad request'
-    })
+    // throw new ErrorWithStatus({
+    //   status: HTTP_STATUS_CODE.BAD_REQUEST,
+    //   message: 'Bad request'
+    // })
   }
 }
 
