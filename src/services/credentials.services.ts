@@ -6,6 +6,7 @@ import { Platform } from '~/constants/enum'
 import { getLongLivedTokenFacebook } from '~/helpers/facebook'
 import { getXProfile } from '~/helpers/x'
 import { getXToken } from '~/helpers/x'
+import { getInstagramProfile, getLongLivedTokenInstagram } from '~/helpers/instagram'
 
 class CredentialServices {
   async createCredential(ownerId: string, body: CreateCredentialRequestBody[]) {
@@ -91,6 +92,32 @@ class CredentialServices {
                 avatar_url: xProfileData.profile_image_url,
                 username: xProfileData.username,
                 public_metrics: xProfileData.public_metrics
+              }
+            }
+          })
+          break
+        case Platform.Instagram:
+          const instagramCredentials = body[0]
+          const longLivedTokenInstagram = await getLongLivedTokenInstagram(
+            instagramCredentials.credentials.code,
+            instagramCredentials.credentials.redirect_uri
+          )
+          const instagramProfile = await getInstagramProfile(longLivedTokenInstagram.access_token)
+          await database.socialCredential.create({
+            data: {
+              platform: instagramCredentials.platform,
+              ownerId,
+              socialOwnerId: instagramProfile.user_id,
+              socialId: instagramProfile.user_id,
+              credentials: {
+                access_token: longLivedTokenInstagram.access_token,
+                user_id: instagramProfile.user_id
+              },
+              metadata: {
+                name: instagramProfile.name,
+                avatar_url: instagramProfile.profile_picture_url,
+                username: instagramProfile.username,
+                followers_count: instagramProfile.followers_count
               }
             }
           })
