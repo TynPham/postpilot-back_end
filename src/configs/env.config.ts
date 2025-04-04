@@ -19,5 +19,7 @@ export const envConfig = {
   aws_s3_bucket: process.env.AWS_S3_BUCKET as string,
   x_client_id: process.env.X_CLIENT_ID as string,
   x_client_secret: process.env.X_CLIENT_SECRET as string,
-  x_callback_url: process.env.X_CALLBACK_URL as string
+  x_callback_url: process.env.X_CALLBACK_URL as string,
+  instagram_client_id: process.env.INSTAGRAM_CLIENT_ID as string,
+  instagram_client_secret: process.env.INSTAGRAM_CLIENT_SECRET as string
 }

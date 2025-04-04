@@ -1,6 +1,7 @@
 import { CronJob } from 'cron'
 import { Platform } from '~/constants/enum'
 import { publishPostFb } from '~/helpers/facebook'
+import { publishPostInstagram } from '~/helpers/instagram'
 import { publishPostThreads } from '~/helpers/threads'
 import { publishPostX } from '~/helpers/x'
 import database from '~/services/database.services'
@@ -29,7 +30,9 @@ const platformHandlers: { [key: string]: any } = {
       media_ids: metadata.media_ids,
       socialCredentialID: credentials.socialCredentialID,
       refresh_token: credentials.refresh_token
-    })
+    }),
+  instagram: (metadata: any, credentials: any) =>
+    publishPostInstagram(credentials.access_token, credentials.user_id, metadata.creation_id)
 }
 
 const schedulePostsJob = new CronJob('*/15 * * * * *', async () => {
