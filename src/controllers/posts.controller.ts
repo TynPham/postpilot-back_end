@@ -5,9 +5,9 @@ import { ParamsDictionary } from 'express-serve-static-core'
 import { CreatePostRequestBody, GetPostDetailsParams, GetPostQuery } from '~/models/request/posts.request'
 
 export const getPostsController = async (req: Request<ParamsDictionary, any, any, GetPostQuery>, res: Response) => {
-  const ownerId = req.auth?.userId
+  const userId = req.auth?.userId
   const platform = req.query.platform
-  const result = await postServices.getPosts(ownerId as string, platform)
+  const result = await postServices.getPosts(userId as string, platform)
 
   res.status(HTTP_STATUS_CODE.OK).json({
     data: result,
