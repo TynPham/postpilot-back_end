@@ -9,8 +9,8 @@ export const createCredentialController = async (
   res: Response
 ) => {
   const requestBody = req.body
-  const ownerId = req.auth?.userId as string
-  await credentialServices.createCredential(ownerId, requestBody)
+  const userId = req.auth?.userId as string
+  await credentialServices.createCredential(userId, requestBody)
 
   res.status(HTTP_STATUS_CODE.OK).json({
     message: 'Create credential successfully'
@@ -22,8 +22,8 @@ export const getCredentialsController = async (
   res: Response
 ) => {
   const { platform } = req.query
-  const ownerId = req.auth?.userId as string
-  const result = await credentialServices.getCredentials(ownerId, platform)
+  const userId = req.auth?.userId as string
+  const result = await credentialServices.getCredentials(userId, platform)
 
   res.status(HTTP_STATUS_CODE.OK).json({
     data: result,

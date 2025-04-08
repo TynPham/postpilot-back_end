@@ -2,6 +2,7 @@ import { CronJob } from 'cron'
 import { Platform } from '~/constants/enum'
 import { publishPostFb } from '~/helpers/facebook'
 import { publishPostInstagram } from '~/helpers/instagram'
+import { sendPostNotification } from '~/helpers/telegram'
 import { publishPostThreads } from '~/helpers/threads'
 import { publishPostX } from '~/helpers/x'
 import database from '~/services/database.services'
@@ -46,11 +47,13 @@ const schedulePostsJob = new CronJob('*/15 * * * * *', async () => {
         }
       },
       include: {
-        socialCredential: true
+        socialCredential: {
+          include: {
+            user: true
+          }
+        }
       }
     })
-
-    console.log(`Found ${posts.length} posts to publish`)
 
     // Group posts by platform
     const postsByPlatform = posts.reduce((acc: { [key: string]: any }, post) => {
@@ -63,7 +66,18 @@ const schedulePostsJob = new CronJob('*/15 * * * * *', async () => {
     await Promise.all(
       Object.entries(postsByPlatform).map(async ([platform, platformPosts]) => {
         for (const post of platformPosts) {
-          console.log(`Publishing post ${post.id} on ${platform}`)
+          const userTelegramId = post.socialCredential.user.telegramId
+
+          if (userTelegramId) {
+            await sendPostNotification({
+              telegramId: userTelegramId,
+              status: 'start',
+              postId: post.id,
+              platform,
+              author: post.socialCredential.metadata.name,
+              message: 'Starting to publish post'
+            })
+          }
 
           const postFunction = platformHandlers[platform]
 
@@ -77,7 +91,16 @@ const schedulePostsJob = new CronJob('*/15 * * * * *', async () => {
             const result = await postFunction(postMetadata, credentials)
 
             if (result) {
-              console.log(`Post ${post.id} published successfully on ${platform}`)
+              if (userTelegramId) {
+                await sendPostNotification({
+                  telegramId: userTelegramId,
+                  status: 'success',
+                  postId: post.id,
+                  platform,
+                  author: post.socialCredential.metadata.name,
+                  message: `Published with ID: ${result}`
+                })
+              }
               await Promise.all([
                 database.post.update({
                   where: {
@@ -97,7 +120,16 @@ const schedulePostsJob = new CronJob('*/15 * * * * *', async () => {
               ])
             }
           } catch (error) {
-            console.log(`Failed to publish post ${post.id} on ${platform}`, error)
+            if (userTelegramId) {
+              await sendPostNotification({
+                telegramId: userTelegramId,
+                status: 'error',
+                postId: post.id,
+                platform,
+                author: post.socialCredential.metadata.name,
+                error
+              })
+            }
             await database.post.update({
               where: {
                 id: post.id

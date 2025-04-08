@@ -21,5 +21,7 @@ export const envConfig = {
   x_client_secret: process.env.X_CLIENT_SECRET as string,
   x_callback_url: process.env.X_CALLBACK_URL as string,
   instagram_client_id: process.env.INSTAGRAM_CLIENT_ID as string,
-  instagram_client_secret: process.env.INSTAGRAM_CLIENT_SECRET as string
+  instagram_client_secret: process.env.INSTAGRAM_CLIENT_SECRET as string,
+  clerk_webhook_secret: process.env.CLERK_WEBHOOK_SECRET as string,
+  telegram_bot_token: process.env.TELEGRAM_BOT_TOKEN as string
 }

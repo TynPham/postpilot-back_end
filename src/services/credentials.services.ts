@@ -9,7 +9,7 @@ import { getXToken } from '~/helpers/x'
 import { getInstagramProfile, getLongLivedTokenInstagram } from '~/helpers/instagram'
 
 class CredentialServices {
-  async createCredential(ownerId: string, body: CreateCredentialRequestBody[]) {
+  async createCredential(userId: string, body: CreateCredentialRequestBody[]) {
     try {
       switch (body[0].platform) {
         case Platform.Facebook:
@@ -18,7 +18,7 @@ class CredentialServices {
               const longLiveTokenFb = await getLongLivedTokenFacebook(credential.credentials.code)
               return {
                 platform: credential.platform,
-                ownerId,
+                userId,
                 socialOwnerId: credential.socialOwnerId,
                 socialId: credential.socialId,
                 credentials: {
@@ -50,7 +50,7 @@ class CredentialServices {
           await database.socialCredential.create({
             data: {
               platform: threadsCredentials.platform,
-              ownerId,
+              userId,
               socialOwnerId: threadsProfile.id,
               socialId: threadsProfile.id,
               credentials: {
@@ -79,7 +79,7 @@ class CredentialServices {
           await database.socialCredential.create({
             data: {
               platform: xCredentials.platform,
-              ownerId,
+              userId,
               socialOwnerId: xProfileData.id,
               socialId: xProfileData.id,
               credentials: {
@@ -106,7 +106,7 @@ class CredentialServices {
           await database.socialCredential.create({
             data: {
               platform: instagramCredentials.platform,
-              ownerId,
+              userId,
               socialOwnerId: instagramProfile.user_id,
               socialId: instagramProfile.user_id,
               credentials: {
@@ -132,7 +132,7 @@ class CredentialServices {
     try {
       const credentials = await database.socialCredential.findMany({
         where: {
-          ownerId: userId,
+          userId,
           platform
         }
       })

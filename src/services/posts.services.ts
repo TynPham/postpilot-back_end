@@ -11,11 +11,11 @@ import { omit } from 'lodash'
 import { createCarouselInstagramMediaContainer, createSingleInstagramMediaContainer } from '~/helpers/instagram'
 
 class PostServices {
-  async getPosts(ownerId: string, platform: string) {
+  async getPosts(userId: string, platform: string) {
     const posts = await database.post.findMany({
       where: {
         socialCredential: {
-          ownerId
+          userId
         },
         platform
       },
