@@ -1,17 +1,25 @@
 import { CreatePostRequestBody } from '~/models/request/posts.request'
 import database from './database.services'
-
-import { getFbLikes, uploadImageFb } from '~/helpers/facebook'
+import { getFbLikes, uploadImageFb, publishPostFb } from '~/helpers/facebook'
 import { ErrorWithStatus } from '~/models/errors'
 import { HTTP_STATUS_CODE } from '~/constants/httpStatusCode'
 import { Platform } from '~/constants/enum'
-import { createCarouselThreadsMediaContainer, createSingleThreadsMediaContainer } from '~/helpers/threads'
-import { uploadImageXFromUrl } from '~/helpers/x'
+import {
+  createCarouselThreadsMediaContainer,
+  createSingleThreadsMediaContainer,
+  publishPostThreads
+} from '~/helpers/threads'
+import { uploadImageXFromUrl, publishPostX } from '~/helpers/x'
 import { omit } from 'lodash'
-import { createCarouselInstagramMediaContainer, createSingleInstagramMediaContainer } from '~/helpers/instagram'
+import {
+  createCarouselInstagramMediaContainer,
+  createSingleInstagramMediaContainer,
+  publishPostInstagram
+} from '~/helpers/instagram'
+import { platformHandlers } from '~/helpers'
 
 class PostServices {
-  async getPosts(userId: string, platform: string) {
+  async getPosts(userId: string, platform?: string) {
     const posts = await database.post.findMany({
       where: {
         socialCredential: {
@@ -32,166 +40,127 @@ class PostServices {
     return posts
   }
 
-  async schedulePost(body: CreatePostRequestBody) {
-    const socialCredentialIDs = body.socialPosts.map((socialPost) => socialPost.socialCredentialID)
-    const socialCredentials = await database.socialCredential.findMany({
-      where: {
-        id: {
-          in: socialCredentialIDs
-        }
-      },
-      select: { id: true, credentials: true }
+  async schedulePost(post: {
+    id: string
+    status: string
+    publicationTime: string
+    platform: string
+    socialCredentialID: string
+    metadata: {
+      type: string
+      content: string
+      assets: { type: string; url: string }[]
+    }
+  }) {
+    const credential = await database.socialCredential.findUnique({
+      where: { id: post.socialCredentialID },
+      select: { credentials: true }
     })
 
-    const schedulePostRequestBody = await Promise.all(
-      body.socialPosts.map(async (socialPost) => {
-        const credential = socialCredentials.find((c) => c.id === socialPost.socialCredentialID)?.credentials as any
-
-        if (!credential) {
-          throw new ErrorWithStatus({
-            status: HTTP_STATUS_CODE.BAD_REQUEST,
-            message: `No credential found with id: ${socialPost.socialCredentialID}`
-          })
-        }
-
-        // facebook
-        if (socialPost.platform === Platform.Facebook) {
-          const imageFbIds = await Promise.all(
-            socialPost.metadata.assets.map((asset) => {
-              return uploadImageFb({
-                access_token: credential.access_token,
-                page_id: credential.page_id,
-                url: asset.url
-              })
-            })
-          )
-
-          return {
-            status: 'scheduled',
-            publicationTime: body.publicationTime,
-            platform: socialPost.platform,
-            socialCredentialID: socialPost.socialCredentialID,
-            metadata: {
-              type: socialPost.metadata.type,
-              content: socialPost.metadata.content,
-              assets: socialPost.metadata.assets.map((asset) => ({
-                type: asset.type,
-                url: asset.url
-              })),
-              media_fbid: imageFbIds
-            }
-          }
-        }
-
-        // threads
-        if (socialPost.platform === Platform.Threads) {
-          // type: carousel
-          let createMediaContainerFunction = null
-          let createMediaBody: any = {
-            media_type: socialPost.metadata.assets[0].type.toUpperCase() as 'IMAGE' | 'VIDEO',
-            text: socialPost.metadata.content
-          }
-          if (socialPost.metadata.assets.length > 1) {
-            createMediaContainerFunction = createCarouselThreadsMediaContainer
-            createMediaBody.image_url = socialPost.metadata.assets.map((asset) => asset.url)
-          } else {
-            createMediaContainerFunction = createSingleThreadsMediaContainer
-            createMediaBody.image_url = socialPost.metadata.assets[0].url
-          }
-
-          // type: single
-          const creation_id = await createMediaContainerFunction(
-            credential.access_token,
-            credential.user_id,
-            createMediaBody
-          )
-
-          return {
-            status: 'scheduled',
-            publicationTime: body.publicationTime,
-            platform: socialPost.platform,
-            socialCredentialID: socialPost.socialCredentialID,
-            metadata: {
-              type: socialPost.metadata.type,
-              content: socialPost.metadata.content,
-              assets: socialPost.metadata.assets.map((asset) => ({
-                type: asset.type,
-                url: asset.url
-              })),
-              creation_id
-            }
-          }
-        }
-
-        // x
-        if (socialPost.platform === Platform.X) {
-          const imageXIds = await Promise.all(
-            socialPost.metadata.assets.map((asset) =>
-              uploadImageXFromUrl(
-                asset.url,
-                credential.access_token,
-                socialPost.socialCredentialID,
-                credential.refresh_token
-              )
-            )
-          )
-
-          return {
-            status: 'scheduled',
-            publicationTime: body.publicationTime,
-            platform: socialPost.platform,
-            socialCredentialID: socialPost.socialCredentialID,
-            metadata: {
-              type: socialPost.metadata.type,
-              content: socialPost.metadata.content,
-              assets: socialPost.metadata.assets.map((asset) => ({
-                type: asset.type,
-                url: asset.url
-              })),
-              media_ids: imageXIds
-            }
-          }
-        }
-        // if (socialPost.platform === Platform.Instagram) {
-        let createMediaContainerFunction = null
-        let createMediaBody: any = {
-          caption: socialPost.metadata.content
-        }
-        if (socialPost.metadata.assets.length > 1) {
-          createMediaContainerFunction = createCarouselInstagramMediaContainer
-          createMediaBody.image_urls = socialPost.metadata.assets.map((asset) => asset.url)
-        } else {
-          createMediaContainerFunction = createSingleInstagramMediaContainer
-          createMediaBody.image_url = socialPost.metadata.assets[0].url
-        }
-        const creation_id = await createMediaContainerFunction(
-          credential.access_token,
-          credential.user_id,
-          createMediaBody
-        )
-
-        return {
-          status: 'scheduled',
-          publicationTime: body.publicationTime,
-          platform: socialPost.platform,
-          socialCredentialID: socialPost.socialCredentialID,
-          metadata: {
-            type: socialPost.metadata.type,
-            content: socialPost.metadata.content,
-            assets: socialPost.metadata.assets.map((asset) => ({
-              type: asset.type,
-              url: asset.url
-            })),
-            creation_id
-          }
-        }
-        // }
+    if (!credential) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS_CODE.BAD_REQUEST,
+        message: `No credential found with id: ${post.socialCredentialID}`
       })
-    )
+    }
 
-    await database.post.createMany({
-      data: schedulePostRequestBody
+    let updatedMetadata: any = post.metadata
+
+    // Facebook
+    if (post.platform === Platform.Facebook) {
+      const imageFbIds = await Promise.all(
+        post.metadata.assets.map((asset) => {
+          return uploadImageFb({
+            access_token: (credential.credentials as any).access_token,
+            page_id: (credential.credentials as any).page_id,
+            url: asset.url
+          })
+        })
+      )
+      updatedMetadata = {
+        ...post.metadata,
+        media_fbid: imageFbIds
+      }
+    }
+
+    // Threads
+    if (post.platform === Platform.Threads) {
+      let createMediaContainerFunction = null
+      let createMediaBody: any = {
+        media_type: post.metadata.assets[0].type.toUpperCase() as 'IMAGE' | 'VIDEO',
+        text: post.metadata.content
+      }
+      if (post.metadata.assets.length > 1) {
+        createMediaContainerFunction = createCarouselThreadsMediaContainer
+        createMediaBody.image_url = post.metadata.assets.map((asset) => asset.url)
+      } else {
+        createMediaContainerFunction = createSingleThreadsMediaContainer
+        createMediaBody.image_url = post.metadata.assets[0].url
+      }
+
+      const creation_id = await createMediaContainerFunction(
+        (credential.credentials as any).access_token,
+        (credential.credentials as any).user_id,
+        createMediaBody
+      )
+      updatedMetadata = {
+        ...post.metadata,
+        creation_id
+      }
+    }
+
+    // X (Twitter)
+    if (post.platform === Platform.X) {
+      const imageXIds = await Promise.all(
+        post.metadata.assets.map((asset) =>
+          uploadImageXFromUrl(
+            asset.url,
+            (credential.credentials as any).access_token,
+            post.socialCredentialID,
+            (credential.credentials as any).refresh_token
+          )
+        )
+      )
+      updatedMetadata = {
+        ...post.metadata,
+        media_ids: imageXIds
+      }
+    }
+
+    // Instagram
+    if (post.platform === Platform.Instagram) {
+      let createMediaContainerFunction = null
+      let createMediaBody: any = {
+        caption: post.metadata.content
+      }
+      if (post.metadata.assets.length > 1) {
+        createMediaContainerFunction = createCarouselInstagramMediaContainer
+        createMediaBody.image_urls = post.metadata.assets.map((asset) => asset.url)
+      } else {
+        createMediaContainerFunction = createSingleInstagramMediaContainer
+        createMediaBody.image_url = post.metadata.assets[0].url
+      }
+      const creation_id = await createMediaContainerFunction(
+        (credential.credentials as any).access_token,
+        (credential.credentials as any).user_id,
+        createMediaBody
+      )
+      updatedMetadata = {
+        ...post.metadata,
+        creation_id
+      }
+    }
+
+    // update post with status SCHEDULED
+    const updatedPost = await database.post.update({
+      where: { id: post.id },
+      data: {
+        status: 'scheduled',
+        metadata: updatedMetadata
+      }
     })
+
+    return updatedPost
   }
 
   async getPostDetails(postId: string) {
@@ -224,6 +193,112 @@ class PostServices {
     }
 
     return omit(post, ['socialCredential.credentials'])
+  }
+
+  async updatePostStatus(postId: string, status: string) {
+    const updatedPost = await database.post.update({
+      where: { id: postId },
+      data: { status }
+    })
+
+    // Emit socket event when post status is updated
+    // emitPostStatusUpdated({
+    //   postId,
+    //   status,
+    //   timestamp: new Date().toISOString()
+    // })
+
+    return updatedPost
+  }
+
+  async createPendingPost(body: CreatePostRequestBody) {
+    const pendingPosts = body.socialPosts.map((socialPost) => ({
+      status: 'pending',
+      publicationTime: body.publicationTime,
+      platform: socialPost.platform,
+      socialCredentialID: socialPost.socialCredentialID,
+      metadata: {
+        type: socialPost.metadata.type,
+        content: socialPost.metadata.content,
+        assets: socialPost.metadata.assets.map((asset) => ({
+          type: asset.type,
+          url: asset.url
+        }))
+      }
+    }))
+
+    const createdPosts = await database.post.createManyAndReturn({
+      data: pendingPosts
+    })
+
+    return createdPosts
+  }
+
+  async publishPost(post: {
+    id: string
+    status: string
+    publicationTime: string
+    platform: string
+    socialCredentialID: string
+    metadata: {
+      type: string
+      content: string
+      assets: { type: string; url: string }[]
+      media_fbid?: string[]
+      creation_id?: string
+      media_ids?: string[]
+    }
+  }) {
+    const credential = await database.socialCredential.findUnique({
+      where: { id: post.socialCredentialID },
+      select: { credentials: true }
+    })
+
+    if (!credential) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS_CODE.BAD_REQUEST,
+        message: `No credential found with id: ${post.socialCredentialID}`
+      })
+    }
+
+    const credentials = credential.credentials as any
+    if (post.platform === Platform.X) {
+      credentials.socialCredentialID = post.socialCredentialID
+    }
+
+    const result = await platformHandlers[post.platform.toLowerCase()](post.metadata, credentials)
+
+    // update post with status PUBLISHED and postId
+    const updatedPost = await database.post.update({
+      where: { id: post.id },
+      data: {
+        status: 'published'
+      }
+    })
+
+    // create publishedPost
+    await database.publishedPost.create({
+      data: {
+        id: post.id,
+        postId: result,
+        metadata: {}
+      }
+    })
+
+    return updatedPost
+  }
+
+  async getScheduledPosts() {
+    const now = new Date()
+    const posts = await database.post.findMany({
+      where: {
+        status: 'scheduled',
+        publicationTime: {
+          lte: now
+        }
+      }
+    })
+    return posts
   }
 }
 

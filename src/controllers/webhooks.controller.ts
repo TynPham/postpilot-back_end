@@ -6,7 +6,7 @@ import database from '~/services/database.services'
 
 export const handleClerkWebhook = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Xác thực webhook từ Clerk
+    // verify webhook from clerk
     const payload = req.body
     const svix_id = req.headers['svix-id'] as string
     const svix_timestamp = req.headers['svix-timestamp'] as string
@@ -35,7 +35,7 @@ export const handleClerkWebhook = async (req: Request, res: Response, next: Next
     const { id } = evt.data
     const eventType = evt.type
 
-    // Xử lý các events khác nhau
+    // handle different events
     switch (eventType) {
       case 'user.created': {
         const { email_addresses, first_name, last_name, image_url, username, created_at } = evt.data
@@ -45,17 +45,25 @@ export const handleClerkWebhook = async (req: Request, res: Response, next: Next
           throw new Error('No primary email found')
         }
 
-        await database.user.create({
-          data: {
-            id: id as string,
-            email: primaryEmail,
-            firstName: first_name || null,
-            lastName: last_name || null,
-            imageUrl: image_url || null,
-            username: username || null,
-            lastSignInAt: new Date(created_at)
-          }
+        // check if user already exists
+        const existingUser = await database.user.findUnique({
+          where: { id }
         })
+
+        // create new user if user not exists
+        if (!existingUser) {
+          await database.user.create({
+            data: {
+              id: id as string,
+              email: primaryEmail,
+              firstName: first_name || null,
+              lastName: last_name || null,
+              imageUrl: image_url || null,
+              username: username || null,
+              lastSignInAt: new Date(created_at)
+            }
+          })
+        }
         break
       }
 
@@ -67,24 +75,40 @@ export const handleClerkWebhook = async (req: Request, res: Response, next: Next
           throw new Error('No primary email found')
         }
 
-        await database.user.update({
-          where: { id },
-          data: {
-            email: primaryEmail,
-            firstName: first_name || null,
-            lastName: last_name || null,
-            imageUrl: image_url || null,
-            username: username || null,
-            lastSignInAt: last_sign_in_at ? new Date(last_sign_in_at) : null
-          }
+        // check if user exists
+        const existingUser = await database.user.findUnique({
+          where: { id }
         })
+
+        // update user if user exists
+        if (existingUser) {
+          await database.user.update({
+            where: { id },
+            data: {
+              email: primaryEmail,
+              firstName: first_name || null,
+              lastName: last_name || null,
+              imageUrl: image_url || null,
+              username: username || null,
+              lastSignInAt: last_sign_in_at ? new Date(last_sign_in_at) : null
+            }
+          })
+        }
         break
       }
 
       case 'user.deleted': {
-        await database.user.delete({
+        // check if user exists
+        const existingUser = await database.user.findUnique({
           where: { id }
         })
+
+        // delete user if user exists
+        if (existingUser) {
+          await database.user.delete({
+            where: { id }
+          })
+        }
         break
       }
     }
