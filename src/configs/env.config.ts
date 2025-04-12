@@ -23,5 +23,13 @@ export const envConfig = {
   instagram_client_id: process.env.INSTAGRAM_CLIENT_ID as string,
   instagram_client_secret: process.env.INSTAGRAM_CLIENT_SECRET as string,
   clerk_webhook_secret: process.env.CLERK_WEBHOOK_SECRET as string,
-  telegram_bot_token: process.env.TELEGRAM_BOT_TOKEN as string
+  telegram_bot_token: process.env.TELEGRAM_BOT_TOKEN as string,
+  client_url: process.env.CLIENT_URL as string,
+  redis_host: process.env.REDIS_HOST as string,
+  redis_port: process.env.REDIS_PORT as string,
+  redis_tls: process.env.REDIS_TLS as string,
+  redis_admin_username: process.env.REDIS_ADMIN_USERNAME as string,
+  redis_admin_password: process.env.REDIS_ADMIN_PASSWORD as string,
+  redis_worker_username: process.env.REDIS_WORKER_USERNAME as string,
+  redis_worker_password: process.env.REDIS_WORKER_PASSWORD as string
 }

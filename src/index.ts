@@ -10,7 +10,10 @@ import path from 'path'
 import yaml from 'yaml'
 import appRouter from './routes'
 import { initFolder } from './utils/file'
-import schedulePostsJob from './jobs/schedule-post'
+import { serverAdapter } from './queue-dashboard'
+import { initSocket } from './services/socket.services'
+import { createServer } from 'http'
+import { cleanup } from './services/queue.services'
 
 const app = express()
 const port = envConfig.port
@@ -40,6 +43,7 @@ app.get('/', async (req: Request, res: Response) => {
 })
 
 app.use('/api/v1', appRouter)
+app.use('/admin/queues', serverAdapter.getRouter())
 
 // swagger
 const swaggerPath = path.join(__dirname, '../docs/docs.yaml')
@@ -50,19 +54,31 @@ app.use('/api/v1/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 // error handler
 app.use(defaultErrorHandler as ErrorRequestHandler)
 
-// job
-schedulePostsJob.start()
+// Create HTTP server and initialize socket
+const httpServer = createServer(app)
+initSocket(httpServer)
 
-const server = app.listen(port, async () => {
+httpServer.listen(port, async () => {
   await connectToDatabase()
   console.log(`Example app listening on port ${port}`)
 })
 
 process.on('SIGINT', () => {
-  server.close(async () => {
-    schedulePostsJob.stop()
+  httpServer.close(async () => {
+    await cleanup()
     await database.$disconnect()
     console.log('Disconnected')
     console.log('Server closed')
+    process.exit(0)
+  })
+})
+
+process.on('SIGTERM', () => {
+  httpServer.close(async () => {
+    await cleanup()
+    await database.$disconnect()
+    console.log('Disconnected')
+    console.log('Server closed')
+    process.exit(0)
   })
 })
