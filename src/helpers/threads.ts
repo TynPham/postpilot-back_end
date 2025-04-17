@@ -90,7 +90,26 @@ export const createSingleThreadsMediaContainer = async (
   }
 }
 
-export const createSingleItemsContainer = async (
+export const createSingleTextMediaContainer = async (access_token: string, threads_user_id: string, text: string) => {
+  try {
+    const queryParams = new URLSearchParams()
+    queryParams.append('access_token', access_token)
+    queryParams.append('media_type', 'TEXT')
+    queryParams.append('text', text)
+    const response = await axios.post<{ id: string }>(
+      `${THREADS_API_URI}/${THREADS_API_VERSION}/${threads_user_id}/threads?${queryParams.toString()}`
+    )
+    return response.data.id
+  } catch (error) {
+    console.log(error)
+    throw new ErrorWithStatus({
+      status: HTTP_STATUS_CODE.BAD_REQUEST,
+      message: 'Bad request'
+    })
+  }
+}
+
+export const createSingleItemsMediaContainer = async (
   access_token: string,
   threads_user_id: string,
   params: Omit<CarouselThreadsPostParams, 'text'>
@@ -124,7 +143,7 @@ export const createCarouselThreadsMediaContainer = async (
   params: CarouselThreadsPostParams
 ) => {
   try {
-    const children = await createSingleItemsContainer(access_token, threads_user_id, params)
+    const children = await createSingleItemsMediaContainer(access_token, threads_user_id, params)
     const queryParams = new URLSearchParams()
     queryParams.append('access_token', access_token)
     queryParams.append('media_type', 'CAROUSEL')
@@ -165,5 +184,35 @@ export const publishPostThreads = async ({
       status: HTTP_STATUS_CODE.BAD_REQUEST,
       message: 'Bad request'
     })
+  }
+}
+
+export const getThreadsEngagement = async (postId: string, access_token: string) => {
+  try {
+    const queryParams = new URLSearchParams({
+      metric: 'likes,views,replies,reposts,shares',
+      access_token
+    })
+    const response = await axios.get(
+      `${THREADS_API_URI}/${THREADS_API_VERSION}/${postId}/insights?${queryParams.toString()}`
+    )
+    const data = response.data.data
+    const engagement = {
+      likes: data.find((item: any) => item.name === 'likes')?.values[0]?.value || 0,
+      views: data.find((item: any) => item.name === 'views')?.values[0]?.value || 0,
+      replies: data.find((item: any) => item.name === 'replies')?.values[0]?.value || 0,
+      reposts: data.find((item: any) => item.name === 'reposts')?.values[0]?.value || 0,
+      shares: data.find((item: any) => item.name === 'shares')?.values[0]?.value || 0
+    }
+    return engagement
+  } catch (error) {
+    console.log(error)
+    return {
+      likes: 0,
+      views: 0,
+      replies: 0,
+      reposts: 0,
+      shares: 0
+    }
   }
 }

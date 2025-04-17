@@ -10,6 +10,6 @@ postsRouter.get('/', authValidator, wrapHandleRequest(getPostsController))
 
 postsRouter.get('/:id', authValidator, wrapHandleRequest(getPostDetailsController))
 
-postsRouter.post('/schedule', authValidator, createPostValidator, wrapHandleRequest(schedulePostController))
+postsRouter.post('/schedule', authValidator, wrapHandleRequest(schedulePostController))
 
 export default postsRouter

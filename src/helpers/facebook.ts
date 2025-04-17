@@ -29,16 +29,19 @@ export const uploadImageFb = async ({ access_token, page_id, url }: UploadImageF
 
 export const publishPostFb = async ({ access_token, page_id, metadata }: PublishPostFbType) => {
   try {
+    const body: any = {
+      message: metadata.message,
+      access_token,
+      published: true
+    }
+    if (metadata.attached_media && metadata.attached_media.length > 0) {
+      body.attached_media = metadata.attached_media.map((mediaId) => ({
+        media_fbid: mediaId
+      }))
+    }
     const response = await axios.post<{ id: string }>(
       `${FACEBOOK_GRAPH_API_URI}/${FACEBOOK_API_VERSION}/${page_id}/feed`,
-      {
-        message: metadata.message,
-        attached_media: metadata.attached_media.map((mediaId) => ({
-          media_fbid: mediaId
-        })),
-        access_token,
-        published: true
-      }
+      body
     )
 
     return response?.data?.id
@@ -66,12 +69,40 @@ export const getLongLivedTokenFacebook = async (accessToken: string) => {
   }
 }
 
-export const getFbLikes = async (postId: string, accessToken: string) => {
-  const queryParams = new URLSearchParams({
-    access_token: accessToken
-  })
-  const response = await axios.get(
-    `${FACEBOOK_GRAPH_API_URI}/${FACEBOOK_API_VERSION}/${postId}/likes?${queryParams.toString()}`
-  )
-  return response?.data?.data
+export const getFbEngagement = async (postId: string, accessToken: string) => {
+  try {
+    const queryParams = new URLSearchParams({
+      fields:
+        'id,likes{id,name,picture,created_time},comments{from{id,name,picture},message,created_time},shares,reactions',
+      access_token: accessToken
+    })
+    const response = await axios.get(
+      `${FACEBOOK_GRAPH_API_URI}/${FACEBOOK_API_VERSION}/${postId}?${queryParams.toString()}`
+    )
+    return response?.data
+  } catch (error) {
+    console.log(error)
+    throw new ErrorWithStatus({
+      status: HTTP_STATUS_CODE.BAD_REQUEST,
+      message: 'Bad request'
+    })
+  }
+}
+
+export const getFbEngagementCount = async (postId: string, accessToken: string) => {
+  const data = {
+    likes: 0,
+    comments: 0,
+    reactions: 0,
+    shares: 0
+  }
+
+  const res = await getFbEngagement(postId, accessToken)
+
+  data.likes = res?.likes?.data?.length || 0
+  data.comments = res?.comments?.data?.length || 0
+  data.reactions = res?.reactions?.data?.length || 0
+  data.shares = res?.shares?.count || 0
+
+  return data
 }

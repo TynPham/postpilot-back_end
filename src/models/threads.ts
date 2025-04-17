@@ -8,7 +8,7 @@ export type SingleThreadsPostParams = {
 export type CarouselThreadsPostParams = {
   image_url?: string[]
   video_url?: string[]
-  media_type: 'IMAGE' | 'VIDEO'
+  media_type: 'IMAGE' | 'VIDEO' | 'TEXT'
   text?: string
 }
 

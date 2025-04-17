@@ -15,6 +15,7 @@ export interface CreatePostRequestBody {
   socialPosts: {
     platform: string
     socialCredentialID: string
+    recurringPostId?: string
     metadata: {
       type: string
       content: string

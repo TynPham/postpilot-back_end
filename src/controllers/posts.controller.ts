@@ -3,7 +3,7 @@ import { HTTP_STATUS_CODE } from '~/constants/httpStatusCode'
 import postServices from '~/services/posts.services'
 import { ParamsDictionary } from 'express-serve-static-core'
 import { CreatePostRequestBody, GetPostDetailsParams, GetPostQuery } from '~/models/request/posts.request'
-import { addPostToProcessQueue } from '~/services/queue.services'
+import { addPostToScheduleQueue } from '~/services/queue.services'
 
 export const getPostsController = async (req: Request<ParamsDictionary, any, any, GetPostQuery>, res: Response) => {
   const userId = req.auth?.userId
@@ -26,9 +26,7 @@ export const schedulePostController = async (
   const pendingPosts = await postServices.createPendingPost(body)
 
   // add to queue to process
-  for (const post of pendingPosts) {
-    await addPostToProcessQueue(post as any)
-  }
+  await Promise.all(pendingPosts.map((post) => addPostToScheduleQueue(post as any)))
 
   res.status(HTTP_STATUS_CODE.CREATED).json({
     message: 'Posts have been added to queue for processing'

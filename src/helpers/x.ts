@@ -1,9 +1,11 @@
 import axios from 'axios'
+import { AxiosError } from 'axios'
 import qs from 'qs'
 import { envConfig } from '~/configs/env.config'
 import { HTTP_STATUS_CODE } from '~/constants/httpStatusCode'
 import { ErrorWithStatus } from '~/models/errors'
 import database from '~/services/database.services'
+import { Platform } from '~/constants/enum'
 
 const X_API_URI = 'https://api.x.com/2'
 
@@ -129,23 +131,22 @@ export const uploadImageXFromUrl = async (
 
 export const publishPostX = async (
   accessToken: string,
-  metadata: { text: string; media_ids: string[]; socialCredentialID: string; refresh_token: string }
+  metadata: { text: string; media_ids?: string[]; socialCredentialID: string; refresh_token: string }
 ): Promise<any> => {
   try {
-    const response = await axios.post(
-      `${X_API_URI}/tweets`,
-      {
-        text: metadata.text,
-        media: {
-          media_ids: metadata.media_ids
-        }
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
+    const body: any = {
+      text: metadata.text
+    }
+    if (metadata.media_ids && metadata.media_ids.length > 0) {
+      body.media = {
+        media_ids: metadata.media_ids
       }
-    )
+    }
+    const response = await axios.post(`${X_API_URI}/tweets`, body, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    })
     return response.data.data.id
   } catch (error: any) {
     console.log(error)
@@ -198,5 +199,80 @@ export const refreshXToken = async (refresh_token: string, socialCredentialId: s
       status: HTTP_STATUS_CODE.UNAUTHORIZED,
       message: 'Error refreshing token'
     })
+  }
+}
+
+export const getXEngagement = async (
+  publishedPostId: string,
+  access_token: string,
+  refreshToken: string,
+  socialCredentialId: string,
+  postId: string
+): Promise<any> => {
+  try {
+    const queryParams = new URLSearchParams({
+      ids: publishedPostId,
+      'tweet.fields': 'public_metrics'
+    })
+    const response = await axios.get(`https://api.twitter.com/2/tweets?${queryParams.toString()}`, {
+      headers: {
+        Authorization: `Bearer ${access_token}`
+      }
+    })
+
+    const metrics = response.data.data[0]?.public_metrics
+    const engagement = {
+      likes: metrics?.like_count || 0,
+      replies: metrics?.reply_count || 0,
+      retweets: metrics?.retweet_count || 0,
+      quotes: metrics?.quote_count || 0,
+      bookmarks: metrics?.bookmark_count || 0
+    }
+
+    await database.publishedPost.update({
+      where: {
+        id_postId: {
+          id: postId,
+          postId: publishedPostId
+        }
+      },
+      data: {
+        metadata: {
+          metrics: engagement
+        }
+      }
+    })
+
+    return engagement
+  } catch (error: any) {
+    if (error.response.status === 429) {
+      const cachedData = await database.publishedPost.findUnique({
+        where: {
+          id_postId: {
+            id: postId,
+            postId: publishedPostId
+          }
+        }
+      })
+
+      if ((cachedData?.metadata as any)?.metrics) {
+        const metrics = (cachedData?.metadata as any).metrics
+        return {
+          likes: metrics?.likes || 0,
+          replies: metrics?.replies || 0,
+          retweets: metrics?.retweets || 0,
+          quotes: metrics?.quotes || 0,
+          bookmarks: metrics?.bookmarks || 0
+        }
+      }
+    }
+
+    return {
+      likes: 0,
+      replies: 0,
+      retweets: 0,
+      quotes: 0,
+      bookmarks: 0
+    }
   }
 }

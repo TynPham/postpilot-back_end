@@ -10,3 +10,10 @@ export enum Platform {
   Instagram = 'instagram',
   Reddit = 'reddit'
 }
+
+export enum PostStatus {
+  Scheduled = 'scheduled',
+  Published = 'published',
+  Failed = 'failed',
+  Active = 'active'
+}
