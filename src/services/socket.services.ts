@@ -1,6 +1,7 @@
 import { Server } from 'socket.io'
 import { Server as HttpServer } from 'http'
 import { envConfig } from '~/configs/env.config'
+import { Post } from '@prisma/client'
 
 let io: Server
 
@@ -39,10 +40,23 @@ export const emitPostStatusUpdated = (data: { postId: string; status: string; ti
   getIO().emit('post:status_updated', data)
 }
 
-export const emitPostProcessed = (data: { postId: string; status: string; timestamp: string }) => {
+export const emitPostProcessed = (data: {
+  postId?: string
+  status: string
+  timestamp: string
+  post?: Post
+  virtualId?: string
+}) => {
   getIO().emit('post:processed', data)
 }
 
-export const emitPostFailed = (data: { postId: string; status: string; error: string; timestamp: string }) => {
+export const emitPostFailed = (data: {
+  postId?: string
+  status: string
+  error: string
+  timestamp: string
+  post?: Post
+  virtualId?: string
+}) => {
   getIO().emit('post:failed', data)
 }

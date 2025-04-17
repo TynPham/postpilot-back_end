@@ -149,3 +149,68 @@ export const publishPostInstagram = async (access_token: string, instagram_user_
     })
   }
 }
+
+export const getIgEngagement = async (postId: string, access_token: string) => {
+  try {
+    const commentsParams = new URLSearchParams({
+      fields: 'id,text,username,timestamp',
+      access_token
+    })
+    const insightsParams = new URLSearchParams({
+      metric: 'likes,shares',
+      range: 'lifetime',
+      access_token
+    })
+
+    const [commentsResponse, insightsResponse] = await Promise.all([
+      axios.get(`${INSTAGRAM_API_URI}/${INSTAGRAM_API_VERSION}/${postId}/comments?${commentsParams}`),
+      axios.get(`${INSTAGRAM_API_URI}/${INSTAGRAM_API_VERSION}/${postId}/insights?${insightsParams}`)
+    ])
+
+    const data = insightsResponse.data.data
+    const likesCount = data.find((item: any) => item.name === 'likes')?.values[0]?.value || 0
+    const sharesCount = data.find((item: any) => item.name === 'shares')?.values[0]?.value || 0
+
+    return {
+      comments: commentsResponse.data.data || [],
+      likes: likesCount,
+      shares: sharesCount
+    }
+  } catch (error) {
+    console.log(error)
+    return {
+      comments: [],
+      likes: 0,
+      shares: 0
+    }
+  }
+}
+
+export const getIgEngagementCount = async (postId: string, access_token: string) => {
+  try {
+    const queryParams = new URLSearchParams({
+      metric: 'comments,likes,saved,shares,views',
+      range: 'lifetime',
+      access_token
+    })
+    const response = await axios.get(`${INSTAGRAM_API_URI}/${INSTAGRAM_API_VERSION}/${postId}/insights?${queryParams}`)
+    const data = response.data.data
+    const engagement = {
+      likes: data.find((item: any) => item.name === 'likes')?.values[0]?.value || 0,
+      comments: data.find((item: any) => item.name === 'comments')?.values[0]?.value || 0,
+      shares: data.find((item: any) => item.name === 'shares')?.values[0]?.value || 0,
+      saved: data.find((item: any) => item.name === 'saved')?.values[0]?.value || 0,
+      views: data.find((item: any) => item.name === 'views')?.values[0]?.value || 0
+    }
+    return engagement
+  } catch (error) {
+    console.log(error)
+    return {
+      likes: 0,
+      comments: 0,
+      shares: 0,
+      saved: 0,
+      views: 0
+    }
+  }
+}

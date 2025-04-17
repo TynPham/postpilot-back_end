@@ -75,26 +75,44 @@ class CredentialServices {
             xCredentials.credentials.code_verifier
           )
           const xProfile = await getXProfile(xAccessToken.access_token)
-          const xProfileData = xProfile.data
-          await database.socialCredential.create({
-            data: {
-              platform: xCredentials.platform,
-              userId,
-              socialOwnerId: xProfileData.id,
-              socialId: xProfileData.id,
-              credentials: {
-                access_token: xAccessToken.access_token,
-                user_id: xProfileData.id,
-                refresh_token: xAccessToken.refresh_token
-              },
-              metadata: {
-                name: xProfileData.name,
-                avatar_url: xProfileData.profile_image_url,
-                username: xProfileData.username,
-                public_metrics: xProfileData.public_metrics
+          const data: any = {
+            platform: xCredentials.platform,
+            userId,
+            socialOwnerId: xProfile.data.id,
+            socialId: xProfile.data.id,
+            credentials: {
+              access_token: xAccessToken.access_token,
+              user_id: xProfile.data.id,
+              refresh_token: xAccessToken.refresh_token
+            },
+            metadata: {
+              name: xProfile.data.name,
+              avatar_url: xProfile.data.profile_image_url,
+              username: xProfile.data.username,
+              public_metrics: xProfile.data.public_metrics
+            }
+          }
+          const existCredential = await database.socialCredential.findUnique({
+            where: {
+              userId_socialId: {
+                userId: userId,
+                socialId: String(xProfile.data.id)
               }
             }
           })
+
+          if (existCredential?.id) {
+            await database.socialCredential.update({
+              where: {
+                id: existCredential.id
+              },
+              data
+            })
+          } else {
+            await database.socialCredential.create({
+              data
+            })
+          }
           break
         case Platform.Instagram:
           const instagramCredentials = body[0]
