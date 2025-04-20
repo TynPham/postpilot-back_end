@@ -28,6 +28,8 @@ export const envConfig = {
   redis_host: process.env.REDIS_HOST as string,
   redis_port: process.env.REDIS_PORT as string,
   redis_tls: process.env.REDIS_TLS as string,
+  redis_username: process.env.REDIS_USERNAME as string,
+  redis_password: process.env.REDIS_PASSWORD as string,
   redis_admin_username: process.env.REDIS_ADMIN_USERNAME as string,
   redis_admin_password: process.env.REDIS_ADMIN_PASSWORD as string,
   redis_worker_username: process.env.REDIS_WORKER_USERNAME as string,

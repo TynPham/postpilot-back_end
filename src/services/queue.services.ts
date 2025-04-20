@@ -1,16 +1,23 @@
 import { Queue, Worker } from 'bullmq'
 import postServices from './posts.services'
 import { emitPostProcessed, emitPostFailed } from './socket.services'
-import { envConfig } from '~/configs/env.config'
+import { envConfig, isProduction } from '~/configs/env.config'
 import { addPublishPostsToQueue } from '~/jobs/publish-post'
 import { scheduleRecurringPosts } from '~/jobs/recurring-post'
 import recurringServicer from './recurring.services'
 
-const redisConnection = {
-  host: envConfig.redis_host || 'localhost',
-  port: parseInt(envConfig.redis_port || '6379'),
-  tls: envConfig.redis_tls === 'true' ? {} : undefined
-}
+const redisConnection = isProduction
+  ? {
+      host: envConfig.redis_host,
+      port: parseInt(envConfig.redis_port),
+      username: envConfig.redis_username,
+      password: envConfig.redis_password,
+      tls: envConfig.redis_tls === 'true' ? {} : undefined
+    }
+  : {
+      host: 'localhost',
+      port: 6379
+    }
 
 // Create queues
 const schedulePostQueue = new Queue('schedule-post-queue', {
