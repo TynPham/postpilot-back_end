@@ -22,6 +22,7 @@ import {
 import { platformHandlers } from '~/helpers'
 import { addPostToScheduleQueue } from './queue.services'
 import moment from 'moment'
+import { sendPostNotification } from '~/helpers/telegram'
 
 class PostServices {
   async getPosts(userId: string, platform?: string) {
@@ -465,6 +466,12 @@ class PostServices {
       creation_id?: string
       media_ids?: string[]
     }
+    telegramId: string | null
+    socialCredential: {
+      metadata: {
+        name: string
+      }
+    }
   }) {
     const credential = await database.socialCredential.findUnique({
       where: { id: post.socialCredentialID, is_disconnected: false },
@@ -482,8 +489,32 @@ class PostServices {
     if (post.platform === Platform.X) {
       credentials.socialCredentialID = post.socialCredentialID
     }
+    const userTelegramId = post.telegramId
+    if (userTelegramId) {
+      await sendPostNotification({
+        telegramId: userTelegramId,
+        status: 'start',
+        postId: post.id,
+        platform: post.platform,
+        author: post.socialCredential.metadata.name,
+        message: 'Starting to publish post'
+      })
+    }
 
     const result = await platformHandlers[post.platform.toLowerCase()](post.metadata, credentials)
+
+    if (result) {
+      if (userTelegramId) {
+        await sendPostNotification({
+          telegramId: userTelegramId,
+          status: 'success',
+          postId: post.id,
+          platform: post.platform,
+          author: post.socialCredential.metadata.name,
+          message: `Published with ID: ${result}`
+        })
+      }
+    }
 
     // update post with status PUBLISHED and postId
     const updatedPost = await database.post.update({

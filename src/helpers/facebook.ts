@@ -73,7 +73,7 @@ export const getFbEngagement = async (postId: string, accessToken: string) => {
   try {
     const queryParams = new URLSearchParams({
       fields:
-        'id,likes{id,name,picture,created_time},comments{from{id,name,picture},message,created_time},shares,reactions',
+        'id,likes{id,name,picture,created_time},comments{from{id,name,picture},message,created_time},shares,reactions,insights.metric(post_impressions_unique)',
       access_token: accessToken
     })
     const response = await axios.get(
@@ -94,7 +94,8 @@ export const getFbEngagementCount = async (postId: string, accessToken: string) 
     likes: 0,
     comments: 0,
     reactions: 0,
-    shares: 0
+    shares: 0,
+    reaches: 0
   }
 
   const res = await getFbEngagement(postId, accessToken)
@@ -103,6 +104,13 @@ export const getFbEngagementCount = async (postId: string, accessToken: string) 
   data.comments = res?.comments?.data?.length || 0
   data.reactions = res?.reactions?.data?.length || 0
   data.shares = res?.shares?.count || 0
+
+  // Get reach and impressions from insights
+  if (res?.insights?.data) {
+    const reachData = res.insights.data.find((item: any) => item.name === 'post_impressions_unique')
+
+    data.reaches = reachData?.values[0]?.value || 0
+  }
 
   return data
 }

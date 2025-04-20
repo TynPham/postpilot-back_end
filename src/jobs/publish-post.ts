@@ -30,7 +30,13 @@ export const addPublishPostsToQueue = async () => {
             publicationTime: post.publicationTime.toISOString(),
             platform: post.platform,
             socialCredentialID: post.socialCredentialID,
-            metadata: post.metadata as any
+            metadata: post.metadata as any,
+            telegramId: post.socialCredential.user.telegramId,
+            socialCredential: {
+              metadata: {
+                name: (post.socialCredential.metadata as any).name
+              }
+            }
           })
         )
       )

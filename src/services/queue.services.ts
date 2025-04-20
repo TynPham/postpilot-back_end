@@ -9,7 +9,7 @@ import recurringServicer from './recurring.services'
 const redisConnection = isProduction
   ? {
       host: envConfig.redis_host,
-      port: parseInt(envConfig.redis_port),
+      port: Number(envConfig.redis_port) || 6379,
       username: envConfig.redis_username,
       password: envConfig.redis_password,
       tls: envConfig.redis_tls === 'true' ? {} : undefined
@@ -277,6 +277,12 @@ export const addPostToPublishQueue = async (post: {
     content: string
     assets: { type: string; url: string }[]
     virtualId?: string
+  }
+  telegramId: string | null
+  socialCredential: {
+    metadata: {
+      name: string
+    }
   }
 }) => {
   await publishPostQueue.add('publish-post', { post })

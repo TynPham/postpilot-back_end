@@ -15,7 +15,8 @@ class StatisticalService {
         likes: 0,
         comments: 0,
         shares: 0,
-        reactions: 0
+        reactions: 0,
+        reaches: 0
       },
       instagramEngagementData: {
         likes: 0,
@@ -96,6 +97,7 @@ class StatisticalService {
         engagementData.facebookEngagementData.comments += engagement.comments
         engagementData.facebookEngagementData.shares += engagement.shares
         engagementData.facebookEngagementData.reactions += engagement.reactions
+        engagementData.facebookEngagementData.reaches += engagement.reaches
       }),
 
       // Instagram
@@ -155,10 +157,11 @@ class StatisticalService {
       engagementData.facebookEngagementData.likes +
       engagementData.facebookEngagementData.comments +
       engagementData.facebookEngagementData.shares +
-      engagementData.facebookEngagementData.reactions
+      engagementData.facebookEngagementData.reactions +
+      engagementData.facebookEngagementData.reaches
 
     // Calculate total reach
-    totalReach += engagementData.facebookEngagementData.reach || 0
+    totalReach += engagementData.facebookEngagementData.reaches || 0
     totalReach += engagementData.instagramEngagementData.views || 0
     // totalReach += engagementData.xEngagementData.impression_count || 0
     totalReach += engagementData.threadsEngagementData.views || 0
