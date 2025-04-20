@@ -193,10 +193,15 @@ export const refreshXToken = async (refresh_token: string, socialCredentialId: s
       }
     })
     return response.data
-  } catch (error) {
-    console.log('Refresh Token Error:', error)
+  } catch (error: any) {
+    if (error.response.status === 401) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS_CODE.UNAUTHORIZED,
+        message: 'Error refreshing token'
+      })
+    }
     throw new ErrorWithStatus({
-      status: HTTP_STATUS_CODE.UNAUTHORIZED,
+      status: HTTP_STATUS_CODE.BAD_REQUEST,
       message: 'Error refreshing token'
     })
   }
@@ -245,6 +250,10 @@ export const getXEngagement = async (
 
     return engagement
   } catch (error: any) {
+    if (error.response.status === 401) {
+      const xToken = await refreshXToken(refreshToken, socialCredentialId)
+      return getXEngagement(publishedPostId, xToken.access_token, xToken.refresh_token, socialCredentialId, postId)
+    }
     if (error.response.status === 429) {
       const cachedData = await database.publishedPost.findUnique({
         where: {

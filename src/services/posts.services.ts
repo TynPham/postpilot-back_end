@@ -27,7 +27,7 @@ class PostServices {
   async getPosts(userId: string, platform?: string) {
     // First, get all social credentials for the user
     const userCredentials = await database.socialCredential.findMany({
-      where: { userId },
+      where: { userId, is_disconnected: false },
       select: { id: true }
     })
 
@@ -39,7 +39,10 @@ class PostServices {
           socialCredentialID: {
             in: credentialIds
           },
-          platform
+          platform,
+          socialCredential: {
+            is_disconnected: false
+          }
         },
         include: {
           socialCredential: {
@@ -57,7 +60,10 @@ class PostServices {
             in: credentialIds
           },
           status: 'active',
-          platform
+          platform,
+          socialCredential: {
+            is_disconnected: false
+          }
         },
         include: {
           socialCredential: {
@@ -179,7 +185,7 @@ class PostServices {
     recurringPostId?: string
   }) {
     const credential = await database.socialCredential.findUnique({
-      where: { id: post.socialCredentialID },
+      where: { id: post.socialCredentialID, is_disconnected: false },
       select: { credentials: true }
     })
 
@@ -307,7 +313,10 @@ class PostServices {
   async getPostDetails(postId: string) {
     const post = await database.post.findUnique({
       where: {
-        id: postId
+        id: postId,
+        socialCredential: {
+          is_disconnected: false
+        }
       },
       include: {
         socialCredential: {
@@ -458,7 +467,7 @@ class PostServices {
     }
   }) {
     const credential = await database.socialCredential.findUnique({
-      where: { id: post.socialCredentialID },
+      where: { id: post.socialCredentialID, is_disconnected: false },
       select: { credentials: true }
     })
 
@@ -503,6 +512,9 @@ class PostServices {
         status: 'scheduled',
         publicationTime: {
           lte: now
+        },
+        socialCredential: {
+          is_disconnected: false
         }
       }
     })
@@ -513,7 +525,10 @@ class PostServices {
     const now = new Date()
     const activePosts = await database.post.findMany({
       where: {
-        status: 'active'
+        status: 'active',
+        socialCredential: {
+          is_disconnected: false
+        }
       }
     })
 

@@ -51,7 +51,8 @@ class StatisticalService {
     const publishedPosts = await database.post.findMany({
       where: {
         socialCredential: {
-          userId
+          userId,
+          is_disconnected: false
         },
         status: PostStatus.Published,
         publishedPost: {
@@ -132,6 +133,7 @@ class StatisticalService {
           post.socialCredential.id,
           post.id
         )
+
         engagementData.xEngagementData.likes += engagement.likes
         engagementData.xEngagementData.replies += engagement.replies
         engagementData.xEngagementData.retweets += engagement.retweets

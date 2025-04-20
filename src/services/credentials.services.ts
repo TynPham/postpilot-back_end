@@ -16,7 +16,16 @@ class CredentialServices {
           const credentialsData = await Promise.all(
             body.map(async (credential) => {
               const longLiveTokenFb = await getLongLivedTokenFacebook(credential.credentials.code)
-              return {
+              const existCredential = await database.socialCredential.findUnique({
+                where: {
+                  userId_socialId: {
+                    userId: userId,
+                    socialId: credential.socialId
+                  }
+                }
+              })
+
+              const bodyData = {
                 platform: credential.platform,
                 userId,
                 socialOwnerId: credential.socialOwnerId,
@@ -29,15 +38,31 @@ class CredentialServices {
                   name: credential.metadata.name,
                   avatar_url: credential.metadata.avatar_url,
                   fan_count: credential.metadata.fan_count
-                }
+                },
+                is_disconnected: false
               }
+
+              if (existCredential) {
+                await database.socialCredential.update({
+                  where: {
+                    id: existCredential.id
+                  },
+                  data: bodyData
+                })
+                return null
+              }
+
+              return bodyData
             })
           )
 
-          await database.socialCredential.createMany({
-            data: credentialsData,
-            skipDuplicates: true
-          })
+          const newCredentials = credentialsData.filter((cred) => cred !== null)
+          if (newCredentials.length > 0) {
+            await database.socialCredential.createMany({
+              data: newCredentials,
+              skipDuplicates: true
+            })
+          }
           break
         case Platform.Threads:
           const threadsCredentials = body[0]
@@ -47,25 +72,45 @@ class CredentialServices {
           )
           const threadsProfile = await getProfileThreads(longLivedToken.access_token)
 
-          await database.socialCredential.create({
-            data: {
-              platform: threadsCredentials.platform,
-              userId,
-              socialOwnerId: threadsProfile.id,
-              socialId: threadsProfile.id,
-              credentials: {
-                access_token: longLivedToken.access_token,
-                user_id: threadsProfile.id
-              },
-              metadata: {
-                name: threadsProfile.name,
-                avatar_url: threadsProfile.threads_profile_picture_url,
-                biography: threadsProfile.threads_biography,
-                username: threadsProfile.username
+          const threadsBodyData = {
+            platform: threadsCredentials.platform,
+            userId,
+            socialOwnerId: threadsProfile.id,
+            socialId: threadsProfile.id,
+            credentials: {
+              access_token: longLivedToken.access_token,
+              user_id: threadsProfile.id
+            },
+            metadata: {
+              name: threadsProfile.name,
+              avatar_url: threadsProfile.threads_profile_picture_url,
+              biography: threadsProfile.threads_biography,
+              username: threadsProfile.username
+            },
+            is_disconnected: false
+          }
+
+          const existThreadsCredential = await database.socialCredential.findUnique({
+            where: {
+              userId_socialId: {
+                userId: userId,
+                socialId: threadsProfile.id
               }
             }
           })
 
+          if (existThreadsCredential) {
+            await database.socialCredential.update({
+              where: {
+                id: existThreadsCredential.id
+              },
+              data: threadsBodyData
+            })
+          } else {
+            await database.socialCredential.create({
+              data: threadsBodyData
+            })
+          }
           break
         case Platform.X:
           const xCredentials = body[0]
@@ -75,7 +120,7 @@ class CredentialServices {
             xCredentials.credentials.code_verifier
           )
           const xProfile = await getXProfile(xAccessToken.access_token)
-          const data: any = {
+          const xBodyData = {
             platform: xCredentials.platform,
             userId,
             socialOwnerId: xProfile.data.id,
@@ -90,7 +135,8 @@ class CredentialServices {
               avatar_url: xProfile.data.profile_image_url,
               username: xProfile.data.username,
               public_metrics: xProfile.data.public_metrics
-            }
+            },
+            is_disconnected: false
           }
           const existCredential = await database.socialCredential.findUnique({
             where: {
@@ -106,11 +152,11 @@ class CredentialServices {
               where: {
                 id: existCredential.id
               },
-              data
+              data: xBodyData
             })
           } else {
             await database.socialCredential.create({
-              data
+              data: xBodyData
             })
           }
           break
@@ -121,24 +167,44 @@ class CredentialServices {
             instagramCredentials.credentials.redirect_uri
           )
           const instagramProfile = await getInstagramProfile(longLivedTokenInstagram.access_token)
-          await database.socialCredential.create({
-            data: {
-              platform: instagramCredentials.platform,
-              userId,
-              socialOwnerId: instagramProfile.user_id,
-              socialId: instagramProfile.user_id,
-              credentials: {
-                access_token: longLivedTokenInstagram.access_token,
-                user_id: instagramProfile.user_id
-              },
-              metadata: {
-                name: instagramProfile.name,
-                avatar_url: instagramProfile.profile_picture_url,
-                username: instagramProfile.username,
-                followers_count: instagramProfile.followers_count
+          const instagramBodyData = {
+            platform: instagramCredentials.platform,
+            userId,
+            socialOwnerId: instagramProfile.user_id,
+            socialId: instagramProfile.user_id,
+            credentials: {
+              access_token: longLivedTokenInstagram.access_token,
+              user_id: instagramProfile.user_id
+            },
+            metadata: {
+              name: instagramProfile.name,
+              avatar_url: instagramProfile.profile_picture_url,
+              username: instagramProfile.username,
+              followers_count: instagramProfile.followers_count
+            },
+            is_disconnected: false
+          }
+          const existInstagramCredential = await database.socialCredential.findUnique({
+            where: {
+              userId_socialId: {
+                userId: userId,
+                socialId: instagramProfile.user_id
               }
             }
           })
+
+          if (existInstagramCredential) {
+            await database.socialCredential.update({
+              where: {
+                id: existInstagramCredential.id
+              },
+              data: instagramBodyData
+            })
+          } else {
+            await database.socialCredential.create({
+              data: instagramBodyData
+            })
+          }
           break
       }
     } catch (error) {
@@ -151,7 +217,8 @@ class CredentialServices {
       const credentials = await database.socialCredential.findMany({
         where: {
           userId,
-          platform
+          platform,
+          is_disconnected: false
         }
       })
       const result = credentials.map((credential) => ({
@@ -159,6 +226,35 @@ class CredentialServices {
         credentials: omit(credential.credentials as Object, ['access_token'])
       }))
       return result
+    } catch (error) {
+      throw error
+    }
+  }
+
+  async disconnectCredential(userId: string, credentialId: string) {
+    try {
+      const credential = await database.socialCredential.findFirst({
+        where: {
+          id: credentialId,
+          userId
+        }
+      })
+
+      if (!credential) {
+        throw new Error('Credential not found')
+      }
+
+      // Update the credential to mark it as disconnected
+      await database.socialCredential.update({
+        where: {
+          id: credentialId
+        },
+        data: {
+          is_disconnected: true
+        }
+      })
+
+      return { message: 'Credential disconnected successfully' }
     } catch (error) {
       throw error
     }

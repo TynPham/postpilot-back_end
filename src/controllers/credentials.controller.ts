@@ -30,3 +30,11 @@ export const getCredentialsController = async (
     message: 'Get credentials successfully'
   })
 }
+
+export const disconnectCredentialController = async (req: Request<ParamsDictionary, any, any>, res: Response) => {
+  const credentialId = req.params.id
+  const userId = req.auth?.userId as string
+  const result = await credentialServices.disconnectCredential(userId, credentialId)
+
+  res.status(HTTP_STATUS_CODE.OK).json(result)
+}

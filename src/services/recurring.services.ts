@@ -92,7 +92,7 @@ class RecurringPostService {
 
   async scheduleNextPost(recurringPostId: string) {
     const recurringPost = await database.recurringPost.findUnique({
-      where: { id: recurringPostId }
+      where: { id: recurringPostId, socialCredential: { is_disconnected: false } }
     })
 
     if (!recurringPost) {
