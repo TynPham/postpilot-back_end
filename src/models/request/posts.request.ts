@@ -28,6 +28,18 @@ export interface CreatePostRequestBody {
   }[]
 }
 
+export interface UpdatePostRequestBody {
+  publicationTime: string
+  metadata: {
+    type: string
+    content: string
+    assets: {
+      type: string
+      url: string
+    }[]
+    [key: string]: any
+  }
+}
 export interface GetPostQuery extends ParsedQs {
   platform?: string
 }
@@ -35,6 +47,9 @@ export interface GetPostQuery extends ParsedQs {
 export interface GetPostDetailsParams extends ParamsDictionary {
   id: string
 }
+
+export type DeletePostParams = GetPostDetailsParams
+export type UpdatePostParams = GetPostDetailsParams
 
 export interface PostResponse {
   id: string

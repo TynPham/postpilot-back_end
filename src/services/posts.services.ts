@@ -1,4 +1,4 @@
-import { CreatePostRequestBody } from '~/models/request/posts.request'
+import { CreatePostRequestBody, UpdatePostRequestBody } from '~/models/request/posts.request'
 import database from './database.services'
 import { uploadImageFb, publishPostFb, getFbEngagement } from '~/helpers/facebook'
 import { ErrorWithStatus } from '~/models/errors'
@@ -577,6 +577,26 @@ class PostServices {
     )
 
     return activePosts
+  }
+
+  async updatePost(postId: string, body: UpdatePostRequestBody) {
+    const updatedPost = await database.post.update({
+      where: { id: postId },
+      data: {
+        ...body,
+        updatedAt: new Date()
+      }
+    })
+
+    return updatedPost
+  }
+
+  async deletePost(postId: string) {
+    const deletedPost = await database.post.delete({
+      where: { id: postId }
+    })
+
+    return deletedPost
   }
 }
 
