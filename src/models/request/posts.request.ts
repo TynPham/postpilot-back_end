@@ -62,3 +62,28 @@ export interface PostResponse {
   createdAt: Date
   updatedAt: Date
 }
+
+export interface UpdateRecurringPostParams extends ParamsDictionary {
+  recurringId: string
+}
+
+export interface UpdateRecurringPostInstancesParams extends ParamsDictionary {
+  recurringId: string
+  instanceId: string
+}
+
+export type UpdateRecurringPostRequestBody = UpdatePostRequestBody & {
+  recurring: {
+    frequency: 'daily' | 'weekly'
+    daysOfWeek?: number[]
+    startDate: string
+    endDate: string
+  }
+  postId?: string
+}
+
+export type DeleteRecurringPostParams = UpdateRecurringPostParams
+
+export interface DeleteRecurringPostQuery extends ParsedQs {
+  publicationTime: string
+}

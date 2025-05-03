@@ -1,4 +1,8 @@
-import { CreatePostRequestBody, UpdatePostRequestBody } from '~/models/request/posts.request'
+import {
+  CreatePostRequestBody,
+  UpdatePostRequestBody,
+  UpdateRecurringPostRequestBody
+} from '~/models/request/posts.request'
 import database from './database.services'
 import { uploadImageFb, publishPostFb, getFbEngagement } from '~/helpers/facebook'
 import { ErrorWithStatus } from '~/models/errors'
@@ -133,9 +137,31 @@ class PostServices {
         const dateStr = date.toISOString().split('T')[0]
         const scheduledDates = recurringPostScheduledDates.get(recurringPost.id) || new Set()
 
-        // Skip if this specific date is already scheduled
-        if (scheduledDates.has(dateStr)) {
+        // Skip if this specific date is already scheduled or if it's in the skipDates array
+        if (
+          scheduledDates.has(dateStr) ||
+          (recurringPost.skipDates && recurringPost.skipDates.some((d) => new Date(d).getTime() === date.getTime()))
+        ) {
           continue
+        }
+
+        const instance = await database.recurringPostInstance.findFirst({
+          where: {
+            recurringPostId: recurringPost.id,
+            publicationTime: date
+          }
+        })
+
+        let metadata = {
+          ...(recurringPost.metadata as any),
+          virtualId: `recurring-${recurringPost.id}-${date.toISOString()}`
+        }
+        if (instance) {
+          metadata = {
+            ...metadata,
+            ...(instance.metadata as any),
+            instanceId: instance.id
+          }
         }
 
         // Create a virtual post object
@@ -145,14 +171,12 @@ class PostServices {
           publicationTime: date.toISOString(),
           platform: recurringPost.platform,
           socialCredentialID: recurringPost.socialCredentialID,
-          metadata: {
-            ...(recurringPost.metadata as any),
-            virtualId: `recurring-${recurringPost.id}-${date.toISOString()}`
-          },
+          metadata,
           recurringPostId: recurringPost.id,
           socialCredential: {
             metadata: recurringPost.socialCredential.metadata
-          }
+          },
+          recurringPost
         }
 
         virtualPosts.push(virtualPost)
@@ -587,6 +611,8 @@ class PostServices {
         updatedAt: new Date()
       }
     })
+
+    await addPostToScheduleQueue(updatedPost as any)
 
     return updatedPost
   }

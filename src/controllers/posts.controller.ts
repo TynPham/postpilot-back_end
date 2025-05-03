@@ -5,10 +5,14 @@ import { ParamsDictionary } from 'express-serve-static-core'
 import {
   CreatePostRequestBody,
   DeletePostParams,
+  DeleteRecurringPostParams,
   GetPostDetailsParams,
   GetPostQuery,
   UpdatePostParams,
-  UpdatePostRequestBody
+  UpdatePostRequestBody,
+  UpdateRecurringPostInstancesParams,
+  UpdateRecurringPostParams,
+  UpdateRecurringPostRequestBody
 } from '~/models/request/posts.request'
 import { addPostToScheduleQueue } from '~/services/queue.services'
 

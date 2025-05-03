@@ -1,5 +1,4 @@
 import { Router } from 'express'
-import { update } from 'lodash'
 import {
   getPostsController,
   schedulePostController,
@@ -8,7 +7,6 @@ import {
   deletePostController
 } from '~/controllers/posts.controller'
 import { authValidator } from '~/middlewares/auth.middleware'
-import { createPostValidator } from '~/middlewares/posts.middleware'
 import { wrapHandleRequest } from '~/utils/handles'
 
 const postsRouter = Router()

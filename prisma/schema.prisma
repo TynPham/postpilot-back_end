@@ -104,8 +104,25 @@ model RecurringPost {
   nextScheduledDate  DateTime?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
+  skipDates          DateTime[] 
 
   posts Post[] // Posts created from this recurring post
 
   @@map("recurring_posts")
+  RecurringPostInstance RecurringPostInstance[]
+}
+
+model RecurringPostInstance {
+  id               String   @id @default(uuid())
+  recurringPostId  String
+  publicationTime    DateTime
+  metadata         Json
+  status           String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  recurringPost    RecurringPost @relation(fields: [recurringPostId], references: [id])
+
+  @@unique([recurringPostId, publicationTime])
+  @@map("recurring_post_instances")
 }
